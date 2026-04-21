@@ -21,7 +21,7 @@ public class TdApi {
         }
     }
 
-    private static final String GIT_COMMIT_HASH = "1677a0c77f30bbb337f91cf6627d62b2a62a8f87";
+    private static final String GIT_COMMIT_HASH = "8921c22f0f85b3cb0b56303f9cba81ba8549f4e8";
 
     private TdApi() {
     }
@@ -4020,7 +4020,7 @@ public class TdApi {
     }
 
     /**
-     * The user is unregistered and need to accept terms of service and enter their first name and last name to finish registration. Call registerUser to accept the terms of service and provide the data.
+     * The user is unregistered and needs to accept terms of service and enter their first name and last name to finish registration. Call registerUser to accept the terms of service and provide the data.
      */
     public static class AuthorizationStateWaitRegistration extends AuthorizationState {
         /**
@@ -4029,13 +4029,13 @@ public class TdApi {
         public TermsOfService termsOfService;
 
         /**
-         * The user is unregistered and need to accept terms of service and enter their first name and last name to finish registration. Call registerUser to accept the terms of service and provide the data.
+         * The user is unregistered and needs to accept terms of service and enter their first name and last name to finish registration. Call registerUser to accept the terms of service and provide the data.
          */
         public AuthorizationStateWaitRegistration() {
         }
 
         /**
-         * The user is unregistered and need to accept terms of service and enter their first name and last name to finish registration. Call registerUser to accept the terms of service and provide the data.
+         * The user is unregistered and needs to accept terms of service and enter their first name and last name to finish registration. Call registerUser to accept the terms of service and provide the data.
          *
          * @param termsOfService Telegram terms of service.
          */
@@ -21945,7 +21945,7 @@ public class TdApi {
          */
         public String text;
         /**
-         * Entities describing changes in the text. Entities doesn't mutually intersect with each other.
+         * Entities describing changes in the text. Entities don't mutually intersect with each other.
          */
         public DiffEntity[] entities;
 
@@ -21959,7 +21959,7 @@ public class TdApi {
          * A text with some changes highlighted.
          *
          * @param text The text.
-         * @param entities Entities describing changes in the text. Entities doesn't mutually intersect with each other.
+         * @param entities Entities describing changes in the text. Entities don't mutually intersect with each other.
          */
         public DiffText(String text, DiffEntity[] entities) {
             this.text = text;
@@ -24206,12 +24206,12 @@ public class TdApi {
     }
 
     /**
-     * The file is a seld-destructing video for a live photo in a private chat.
+     * The file is a self-destructing video for a live photo in a private chat.
      */
     public static class FileTypeSelfDestructingLivePhotoVideo extends FileType {
 
         /**
-         * The file is a seld-destructing video for a live photo in a private chat.
+         * The file is a self-destructing video for a live photo in a private chat.
          */
         public FileTypeSelfDestructingLivePhotoVideo() {
         }
@@ -50047,7 +50047,7 @@ public class TdApi {
          */
         public boolean canGetStatistics;
         /**
-         * True, if advertisements for video of the message can be received though getVideoMessageAdvertisements.
+         * True, if advertisements for video of the message can be received through getVideoMessageAdvertisements.
          */
         public boolean canGetVideoAdvertisements;
         /**
@@ -50126,7 +50126,7 @@ public class TdApi {
          * @param canGetMessageThread True, if information about the message thread is available through getMessageThread and getMessageThreadHistory.
          * @param canGetReadDate True, if read date of the message can be received through getMessageReadDate.
          * @param canGetStatistics True, if message statistics are available through getMessageStatistics and message forwards can be received using getMessagePublicForwards.
-         * @param canGetVideoAdvertisements True, if advertisements for video of the message can be received though getVideoMessageAdvertisements.
+         * @param canGetVideoAdvertisements True, if advertisements for video of the message can be received through getVideoMessageAdvertisements.
          * @param canGetViewers True, if chat members already viewed the message can be received through getMessageViewers.
          * @param canMarkTasksAsDone True, if tasks can be marked as done or not done in the message's checklist using markChecklistTasksAsDone if the current user has Telegram Premium subscription.
          * @param canRecognizeSpeech True, if speech can be recognized for the message through recognizeSpeech.
@@ -92320,7 +92320,7 @@ public class TdApi {
     }
 
     /**
-     * The rarity is represented as the numeric frequence of the model.
+     * The rarity is represented as the numeric frequency of the model.
      */
     public static class UpgradedGiftAttributeRarityPerMille extends UpgradedGiftAttributeRarity {
         /**
@@ -92329,13 +92329,13 @@ public class TdApi {
         public int perMille;
 
         /**
-         * The rarity is represented as the numeric frequence of the model.
+         * The rarity is represented as the numeric frequency of the model.
          */
         public UpgradedGiftAttributeRarityPerMille() {
         }
 
         /**
-         * The rarity is represented as the numeric frequence of the model.
+         * The rarity is represented as the numeric frequency of the model.
          *
          * @param perMille The number of upgraded gifts that receive this attribute for each 1000 gifts upgraded; if 0, then it can be shown as &quot;&lt;0.1%&quot;.
          */
@@ -95711,7 +95711,7 @@ public class TdApi {
     }
 
     /**
-     * Describes an advertisent to be shown while a video from a message is watched.
+     * Describes an advertisement to be shown while a video from a message is watched.
      */
     public static class VideoMessageAdvertisement extends Object {
         /**
@@ -95748,13 +95748,13 @@ public class TdApi {
         public String additionalInfo;
 
         /**
-         * Describes an advertisent to be shown while a video from a message is watched.
+         * Describes an advertisement to be shown while a video from a message is watched.
          */
         public VideoMessageAdvertisement() {
         }
 
         /**
-         * Describes an advertisent to be shown while a video from a message is watched.
+         * Describes an advertisement to be shown while a video from a message is watched.
          *
          * @param uniqueId Unique identifier of this result.
          * @param text Text of the advertisement.
@@ -104536,7 +104536,7 @@ public class TdApi {
     }
 
     /**
-     * Adds an option to a poll.
+     * Deletes an option from a poll.
      *
      * <p> Returns {@link Ok Ok} </p>
      */
@@ -104555,7 +104555,7 @@ public class TdApi {
         public String optionId;
 
         /**
-         * Default constructor for a function, which adds an option to a poll.
+         * Default constructor for a function, which deletes an option from a poll.
          *
          * <p> Returns {@link Ok Ok} </p>
          */
@@ -104563,7 +104563,7 @@ public class TdApi {
         }
 
         /**
-         * Creates a function, which adds an option to a poll.
+         * Creates a function, which deletes an option from a poll.
          *
          * <p> Returns {@link Ok Ok} </p>
          *
@@ -121746,14 +121746,14 @@ public class TdApi {
     }
 
     /**
-     * Returns promotional anumation for upgraded gifts.
+     * Returns promotional animation for upgraded gifts.
      *
      * <p> Returns {@link Animation Animation} </p>
      */
     public static class GetUpgradedGiftsPromotionalAnimation extends Function<Animation> {
 
         /**
-         * Default constructor for a function, which returns promotional anumation for upgraded gifts.
+         * Default constructor for a function, which returns promotional animation for upgraded gifts.
          *
          * <p> Returns {@link Animation Animation} </p>
          */
