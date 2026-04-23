@@ -21,7 +21,7 @@ public class TdApi {
         }
     }
 
-    private static final String GIT_COMMIT_HASH = "ac5501a3a73050d6f4abe819467b8d36d4b849b6";
+    private static final String GIT_COMMIT_HASH = "94c2fb3aaeb6038ad7e701dcfbe8e0dce8d89488";
 
     private TdApi() {
     }
