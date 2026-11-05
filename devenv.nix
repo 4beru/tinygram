@@ -27,6 +27,7 @@ in
     pass
     shellcheck
     stdenv.cc
+    watchexec
   ];
 
   languages.c.enable = lib.mkForce false;
@@ -81,6 +82,7 @@ in
     "$JDK25_HOME/bin/java" -version
     rustc --version
     cargo ndk --version
+    watchexec --version
     adb version
     aapt2 version
     test -f "$ANDROID_HOME/platforms/android-37.0/android.jar"
