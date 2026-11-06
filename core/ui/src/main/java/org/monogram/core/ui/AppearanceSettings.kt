@@ -58,7 +58,7 @@ internal fun restoreWallpaperMode(raw: String?, path: String?): WallpaperMode {
 
 data class AppearanceState(
     val theme: ThemePreference = ThemePreference.System,
-    val dynamicColor: Boolean = true,
+    val dynamicColor: Boolean = false,
     val accentPreset: AccentPreset = AccentPreset.Monogram,
     val showMutedCounter: Boolean = false,
     val foldersAtBottom: Boolean = false,
@@ -141,7 +141,7 @@ object AppearanceSettings {
         val wallpaperPath = prefs.getString("wallpaper_path", null)?.takeIf { java.io.File(it).isFile }
         mutable.value = AppearanceState(
             theme = parseTheme(prefs.getString(KEY_THEME, null)),
-            dynamicColor = prefs.getBoolean(KEY_DYNAMIC, true),
+            dynamicColor = prefs.getBoolean(KEY_DYNAMIC, false),
             accentPreset = parseAccent(prefs.getString("accent_preset", null)),
             showMutedCounter = prefs.getBoolean(KEY_MUTED_COUNTER, false),
             foldersAtBottom = prefs.getBoolean(KEY_FOLDERS_AT_BOTTOM, false),

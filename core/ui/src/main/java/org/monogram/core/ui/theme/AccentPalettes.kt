@@ -12,7 +12,7 @@ private data class AccentColors(
 )
 
 private fun accentColors(preset: AccentPreset): AccentColors = when (preset) {
-    AccentPreset.Monogram -> AccentColors(Color(0xFF006A8C), Color(0xFF77D1F5), Color(0xFF4D616C), Color(0xFFB5CAD6), Color(0xFF655B7B), Color(0xFFD0BFE7))
+    AccentPreset.Monogram -> AccentColors(PrimaryLight, PrimaryDark, SecondaryLight, SecondaryDark, TertiaryLight, TertiaryDark)
     AccentPreset.Sakura -> AccentColors(Color(0xFF984061), Color(0xFFFFB0CB), Color(0xFF765565), Color(0xFFE5BDCF), Color(0xFF775A2E), Color(0xFFECC18C))
     AccentPreset.Ocean -> AccentColors(Color(0xFF006780), Color(0xFF65D5F3), Color(0xFF4A626B), Color(0xFFB1CBD5), Color(0xFF52652C), Color(0xFFBAD18E))
     AccentPreset.Forest -> AccentColors(Color(0xFF356A3D), Color(0xFF9BD5A0), Color(0xFF54634B), Color(0xFFBCCCAF), Color(0xFF836000), Color(0xFFF2C14D))
