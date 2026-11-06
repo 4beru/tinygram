@@ -437,11 +437,14 @@ fun ChatsContent(
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 if (selectingRecipient) {
                     androidx.compose.material3.TopAppBar(
+                        colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        ),
                         title = {
                             Text(
                                 text = stringResource(R.string.chats_share_recipient),
@@ -558,6 +561,7 @@ fun ChatsContent(
                                 onManage = if (selectingRecipient) null else stableOpenFolders,
                                 manageContentDescription = if (selectingRecipient) null else manageFoldersLabel,
                                 onLongPress = if (selectingRecipient) null else stableChipLongPress,
+                                edgeFadeColor = MaterialTheme.colorScheme.surfaceContainerLow,
                             )
                             if (!selectingRecipient) {
                                 AppMenuPopup(

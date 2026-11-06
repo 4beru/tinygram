@@ -56,6 +56,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -181,12 +183,27 @@ fun AuthScreen(
     Scaffold(
         modifier = modifier
             .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.surface,
+                        MaterialTheme.colorScheme.surfaceContainerLow,
+                    ),
+                ),
+            )
             .testTag(AuthTestTags.ROOT),
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onSurface,
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
-                title = {},
+                title = {
+                    Text(
+                        stringResource(R.string.auth_brand),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                },
                 navigationIcon = {
                     if (canGoBack) {
                         val back = stringResource(R.string.auth_cd_back)
@@ -200,7 +217,8 @@ fun AuthScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent,
                 ),
                 actions = {
                     if (onOpenProxy != null) {
@@ -218,7 +236,7 @@ fun AuthScreen(
             )
         },
         bottomBar = {
-            if (step != 0) Surface(color = MaterialTheme.colorScheme.surface) {
+            if (step != 0) Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()

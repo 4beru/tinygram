@@ -11,6 +11,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas as GraphicsCanvas
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
@@ -35,7 +36,7 @@ fun MonogramWallpaper(modifier: Modifier = Modifier) {
     Canvas(
         modifier = modifier
             .fillMaxSize()
-            .background(scheme.surface),
+            .background(Brush.verticalGradient(listOf(scheme.surface, scheme.surfaceContainerLow))),
     ) {
         val stepX = tile.width
         val stepY = tile.height

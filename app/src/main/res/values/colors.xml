@@ -7,5 +7,9 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="notification_accent">#FF005DB8</color>
+    <color name="notification_accent">#FF1A6265</color>
+    <color name="startup_background">#FFFDF5E2</color>
+    <color name="startup_background_light">#FFFDF5E2</color>
+    <color name="startup_background_dark">#FF001419</color>
+    <color name="startup_foreground">#FF1A6265</color>
 </resources>

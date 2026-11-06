@@ -94,7 +94,7 @@ internal fun ChatsTopBar(
     // Pinned single-row bar: it never moves, only its surface tone and content change.
     val containerColor by animateColorAsState(
         targetValue = if (atTop) {
-            MaterialTheme.colorScheme.surface
+            MaterialTheme.colorScheme.surfaceContainerLow
         } else {
             MaterialTheme.colorScheme.surfaceContainer
         },

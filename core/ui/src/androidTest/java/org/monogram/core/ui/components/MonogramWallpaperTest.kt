@@ -4,7 +4,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.captureToImage
@@ -16,14 +20,15 @@ import kotlin.math.roundToInt
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.monogram.core.ui.theme.MonogramTheme
 
-/** The pre-rasterized wallpaper must repeat on the 96.dp grid without seams or stray tiles. */
+/** The vertical gradient must not introduce horizontal pattern seams. */
 class MonogramWallpaperTest {
     @get:Rule
     val rule = createComposeRule()
 
     @Test
-    fun wallpaperRepeatsOnThePatternGrid() {
+    fun wallpaperRepeatsHorizontallyOnThePatternGrid() {
         rule.setContent {
             MaterialTheme {
                 Box(Modifier.size(360.dp, 320.dp).testTag("wall")) {
@@ -33,7 +38,6 @@ class MonogramWallpaperTest {
         }
         val pixels = rule.onNodeWithTag("wall").captureToImage().toPixelMap()
         val stepX = (rule.density.density * 96f).roundToInt()
-        val stepY = stepX * 2
 
         var sampled = 0
         var mismatched = 0
@@ -47,18 +51,36 @@ class MonogramWallpaperTest {
                     if (delta > 2f) mismatched++
                     sampled++
                 }
-                if (y + stepY < pixels.height) {
-                    val delta = channelDelta(here, pixels[x, y + stepY])
-                    worst = maxOf(worst, delta)
-                    if (delta > 2f) mismatched++
-                    sampled++
-                }
             }
         }
         assertTrue(
-            "wallpaper breaks its $stepX x $stepY grid on $mismatched of $sampled pixels (worst $worst)",
+            "wallpaper breaks its $stepX horizontal grid on $mismatched of $sampled pixels (worst $worst)",
             mismatched <= sampled / 1000,
         )
+    }
+
+    @Test
+    fun wallpaperUsesThemeGradientInBothModes() {
+        var dark by mutableStateOf(false)
+        var top = Color.Unspecified
+        var bottom = Color.Unspecified
+        rule.setContent {
+            MonogramTheme(darkTheme = dark, dynamicColor = false) {
+                top = MaterialTheme.colorScheme.surface
+                bottom = MaterialTheme.colorScheme.surfaceContainerLow
+                Box(Modifier.size(360.dp, 320.dp).testTag("wall")) {
+                    MonogramWallpaper(Modifier.fillMaxSize())
+                }
+            }
+        }
+        for (mode in listOf(false, true)) {
+            rule.runOnIdle { dark = mode }
+            val pixels = rule.onNodeWithTag("wall").captureToImage().toPixelMap()
+            val x = (rule.density.density * 10f).roundToInt()
+            assertTrue("top dark=$mode", channelDelta(top, pixels[x, 1]) <= 2f)
+            assertTrue("bottom dark=$mode", channelDelta(bottom, pixels[x, pixels.height - 2]) <= 2f)
+            assertTrue("gradient dark=$mode", channelDelta(pixels[x, 1], pixels[x, pixels.height - 2]) > 6f)
+        }
     }
 }
 
