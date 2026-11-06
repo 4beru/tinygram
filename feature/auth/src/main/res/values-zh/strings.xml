@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="auth_brand">Tinygram</string>
     <string name="auth_title">登录 Telegram</string>
     <string name="auth_subtitle">输入你的手机号码</string>
     <string name="auth_phone_label">手机号码</string>

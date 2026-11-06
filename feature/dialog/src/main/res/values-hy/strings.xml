@@ -416,7 +416,7 @@
     <string name="dialog_checklist_remove_confirm">Հեռացնե՞լ «%1$s» առաջադրանքը</string>
     <string name="dialog_replace_attachment">Փոխարինել կցորդը</string>
     <string name="dialog_location_share_live">Կիսվել ընթացիկ տեղադրությամբ</string>
-    <string name="dialog_location_foreground">Թարմացվում է միայն, երբ Monogram-ը տեսանելի է։ Վերադառնալուց հետո վերսկսեք տեղադրության փոխանցումը</string>
+    <string name="dialog_location_foreground">Թարմացվում է միայն, երբ Tinygram-ը տեսանելի է։ Վերադառնալուց հետո վերսկսեք տեղադրության փոխանցումը</string>
     <string name="dialog_location_paused">Դադարեցված է</string>
     <string name="dialog_location_stopping">Տեղադրության փոխանցումը դադարեցվում է…</string>
     <string name="dialog_location_stop_uncertain">Դադարեցումը հաստատված չէ։ Կրկին փորձեք դադարեցնել</string>

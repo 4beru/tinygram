@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="auth_brand">Tinygram</string>
     <string name="auth_title">Telegram にログイン</string>
     <string name="auth_subtitle">電話番号を入力してください</string>
     <string name="auth_phone_label">電話番号</string>

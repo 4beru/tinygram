@@ -438,7 +438,7 @@
     <string name="dialog_checklist_remove_confirm">Удалить задачу «%1$s»?</string>
     <string name="dialog_replace_attachment">Заменить вложение</string>
     <string name="dialog_location_share_live">Делиться геопозицией</string>
-    <string name="dialog_location_foreground">Геопозиция обновляется, только пока открыт Monogram. Вернувшись, возобновите трансляцию</string>
+    <string name="dialog_location_foreground">Геопозиция обновляется, только пока открыт Tinygram. Вернувшись, возобновите трансляцию</string>
     <string name="dialog_location_paused">Приостановлена</string>
     <string name="dialog_location_stopping">Остановка трансляции…</string>
     <string name="dialog_location_stop_uncertain">Остановка не подтверждена. Попробуйте остановить трансляцию ещё раз</string>

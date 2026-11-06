@@ -416,7 +416,7 @@
     <string name="dialog_checklist_remove_confirm">Remover a tarefa “%1$s”?</string>
     <string name="dialog_replace_attachment">Substituir anexo</string>
     <string name="dialog_location_share_live">Compartilhar localização em tempo real</string>
-    <string name="dialog_location_foreground">Atualiza apenas enquanto o Monogram está visível. Retome o compartilhamento ao voltar</string>
+    <string name="dialog_location_foreground">Atualiza apenas enquanto o Tinygram está visível. Retome o compartilhamento ao voltar</string>
     <string name="dialog_location_paused">Pausada</string>
     <string name="dialog_location_stopping">Parando de compartilhar…</string>
     <string name="dialog_location_stop_uncertain">A interrupção não foi confirmada. Tente parar novamente</string>

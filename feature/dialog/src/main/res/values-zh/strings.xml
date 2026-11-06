@@ -405,7 +405,7 @@
     <string name="dialog_checklist_remove_confirm">要删除任务“%1$s”吗？</string>
     <string name="dialog_replace_attachment">替换附件</string>
     <string name="dialog_location_share_live">共享实时位置</string>
-    <string name="dialog_location_foreground">仅在 Monogram 可见时更新。返回应用后请恢复共享</string>
+    <string name="dialog_location_foreground">仅在 Tinygram 可见时更新。返回应用后请恢复共享</string>
     <string name="dialog_location_paused">已暂停</string>
     <string name="dialog_location_stopping">正在停止共享…</string>
     <string name="dialog_location_stop_uncertain">尚未确认停止，请再次尝试停止共享</string>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="auth_brand">Tinygram</string>
     <string name="auth_title">Iniciar sesión en Telegram</string>
     <string name="auth_subtitle">Introduce tu número de teléfono</string>
     <string name="auth_phone_label">Número de teléfono</string>

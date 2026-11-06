@@ -405,7 +405,7 @@
     <string name="dialog_checklist_remove_confirm">タスク「%1$s」を削除しますか？</string>
     <string name="dialog_replace_attachment">添付ファイルを置き換え</string>
     <string name="dialog_location_share_live">現在地をリアルタイムで共有</string>
-    <string name="dialog_location_foreground">Monogramの表示中のみ更新されます。戻った後に共有を再開してください</string>
+    <string name="dialog_location_foreground">Tinygramの表示中のみ更新されます。戻った後に共有を再開してください</string>
     <string name="dialog_location_paused">一時停止中</string>
     <string name="dialog_location_stopping">共有を停止しています…</string>
     <string name="dialog_location_stop_uncertain">停止を確認できません。もう一度停止してください</string>

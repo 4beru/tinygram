@@ -438,7 +438,7 @@
     <string name="dialog_checklist_remove_confirm">Odstrániť úlohu „%1$s“?</string>
     <string name="dialog_replace_attachment">Nahradiť prílohu</string>
     <string name="dialog_location_share_live">Zdieľať polohu naživo</string>
-    <string name="dialog_location_foreground">Aktualizuje sa iba vtedy, keď je Monogram viditeľný. Po návrate obnovte zdieľanie</string>
+    <string name="dialog_location_foreground">Aktualizuje sa iba vtedy, keď je Tinygram viditeľný. Po návrate obnovte zdieľanie</string>
     <string name="dialog_location_paused">Pozastavené</string>
     <string name="dialog_location_stopping">Zastavuje sa zdieľanie…</string>
     <string name="dialog_location_stop_uncertain">Zastavenie nebolo potvrdené. Skúste ho znova</string>

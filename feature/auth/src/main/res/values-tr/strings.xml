@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="auth_brand">Tinygram</string>
     <string name="auth_title">Telegram\'a giriş</string>
     <string name="auth_subtitle">Telefon numaranızı girin</string>
     <string name="auth_phone_label">Telefon numarası</string>

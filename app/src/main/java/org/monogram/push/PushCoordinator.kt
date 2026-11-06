@@ -451,7 +451,7 @@ class PushCoordinator(
                 UnifiedPush.register(
                     context,
                     instance = instance,
-                    messageForDistributor = "Monogram"
+                    messageForDistributor = context.getString(org.monogram.R.string.app_name)
                 )
             }
             if (chosen.isNotBlank()) {

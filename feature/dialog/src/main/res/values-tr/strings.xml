@@ -416,7 +416,7 @@
     <string name="dialog_checklist_remove_confirm">“%1$s” görevi kaldırılsın mı?</string>
     <string name="dialog_replace_attachment">Eki değiştir</string>
     <string name="dialog_location_share_live">Canlı konum paylaş</string>
-    <string name="dialog_location_foreground">Yalnızca Monogram görünürken güncellenir. Geri döndüğünüzde paylaşımı sürdürün</string>
+    <string name="dialog_location_foreground">Yalnızca Tinygram görünürken güncellenir. Geri döndüğünüzde paylaşımı sürdürün</string>
     <string name="dialog_location_paused">Duraklatıldı</string>
     <string name="dialog_location_stopping">Paylaşım durduruluyor…</string>
     <string name="dialog_location_stop_uncertain">Durdurma onaylanmadı. Tekrar durdurmayı deneyin</string>
