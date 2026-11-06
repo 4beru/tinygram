@@ -195,7 +195,7 @@ Comprobado el 5 de noviembre de 2026, con el teléfono Android 10/API 29, ABI `a
 - APK generado: `app/build/outputs/apk/debug/monogram-arm64-v8a-0.4.3-debug.apk`.
 - Watcher: prueba aislada satisfactoria de ejecución inicial, eventos Kotlin/XML y exclusión de archivos generados en `build`. No se probó todavía una edición de interfaz seguida de actualización automática en el teléfono.
 
-La orden de apertura se envió, pero su comprobación no terminó. Al cerrar la verificación, el 6 de noviembre, ADB ya no detectaba el teléfono. Quedan pendientes la confirmación visual del arranque, el inicio de sesión en Telegram, una segunda instalación que conserve datos y la comprobación del watcher sobre la app real. No se ejecutaron pruebas instrumentadas ni se verificó Live Edit.
+Durante la preparación inicial, la orden de apertura se envió, pero su comprobación no terminó. Al cerrar aquella verificación, el 6 de noviembre, ADB ya no detectaba el teléfono. Posteriormente confirmaste que la app abre y que las funciones del login que probaste responden correctamente, sin haber iniciado sesión en Telegram. Esto confirma esas comprobaciones manuales, no una sesión autenticada ni el watcher sobre la app real.
 
 Para continuar, vuelve a conectar y desbloquear el teléfono, entra en `devenv shell`, selecciona `ANDROID_SERIAL` como en el paso 3 y ejecuta:
 
@@ -204,3 +204,29 @@ timeout 20s adb shell am start -n org.monogram.debug/org.monogram.MainActivity
 ```
 
 Confirma visualmente la apertura antes de iniciar el watcher. Si la orden expira, detente y diagnostica la conexión y el arranque sin desinstalar ni borrar datos.
+
+## 9. Identidad Tinygram y temas Osaka
+
+La marca visible es **Tinygram** en los diez idiomas existentes. Los identificadores técnicos, nombres de paquetes, recursos, archivos y almacenamiento siguen intactos. Por eso el APK todavía se llama `monogram-arm64-v8a-0.4.3-debug.apk`. Los enlaces y la promoción de patrocinio del proyecto original conservan su identidad y destinatario.
+
+La paleta se inspira en Solarized Osaka y adapta los acentos al contraste de una interfaz móvil:
+
+| Rol | Claro | Oscuro |
+| --- | --- | --- |
+| Fondo | `#FDF5E2` | `#001419` |
+| Panel de chats | `#EDE7D3` | `#002C38` |
+| Acento principal | `#1A6265` | `#6ED2C8` |
+| Texto principal | `#546A71` | `#ADB7B7` |
+
+El login y el wallpaper predeterminado usan degradados discretos. Las imágenes de fondo elegidas por el usuario no se modifican. Se conservan las formas y animaciones Expressive y los demás presets de acento.
+
+En Ajustes → Apariencia, elige el acento **Tinygram** para esta paleta. El color dinámico sigue disponible en dispositivos compatibles y puede reemplazarla si lo activas. En instalaciones nuevas está desactivado por defecto; se respeta una elección guardada anteriormente. El preset mantiene internamente el identificador `Monogram` para no romper preferencias existentes.
+
+Comprobaciones del 6 de noviembre de 2026 para esta personalización:
+
+- `devenv test`: pasó.
+- `./gradlew :core:ui:testDebugUnitTest -PtargetAbi=arm64-v8a`: pasaron 68 pruebas, incluidas las de contraste de roles claros/oscuros y degradados, sin errores ni pruebas omitidas.
+- `./gradlew :app:assembleDebug :app:assembleDebugAndroidTest :core:ui:assembleDebugAndroidTest -PtargetAbi=arm64-v8a`: compiló la app y los APK de pruebas, sin omitir tareas nativas.
+- `./gradlew :app:installDebug -PtargetAbi=arm64-v8a`: actualizó la instalación existente por USB, sin desinstalar ni borrar datos.
+- Dos pruebas instrumentadas pasaron con `adb shell am instrument -w -e class ...`: `org.monogram.core.ui.AppearanceSettingsTest` verificó las preferencias en almacenamiento aislado y `org.monogram.TinygramAppearanceTest#tinygramBrandResolvesInEverySupportedLocale` verificó la marca en los diez idiomas.
+- Se intentaron las dos pruebas de `org.monogram.core.ui.components.MonogramWallpaperTest`, pero no encontraron una jerarquía Compose mientras el teléfono estaba bloqueado y con la pantalla apagada. La prueba `org.monogram.TinygramAppearanceTest#phoneEntryLightHasAccessibleActions` tampoco pudo continuar: Espresso informó que no había una actividad en estado `RESUMED`. Estas tres pruebas no se consideran aprobadas. Queda pendiente reintentarlas con el teléfono desbloqueado y completar el login claro/oscuro, texto ampliado y panel adaptable. No se ha verificado una sesión real de Telegram ni Live Edit.
