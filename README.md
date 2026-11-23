@@ -180,6 +180,6 @@ Contributions are welcome. Branch from `develop` and open pull requests against 
 
 ## Credits & license
 
-Tinygram builds on the open-source [Monogram](https://github.com/monogram-android/monogram) project and its [mono-rs](https://github.com/monogram-android/mono-rs) MTProto stack. Credit also belongs to the maintainers of the libraries used throughout the project.
+Tinygram builds on the open-source [mono-rs](https://github.com/monogram-android/mono-rs) MTProto stack. Credit also belongs to the maintainers of the libraries used throughout the project.
 
 Licensed under the [GNU General Public License v3.0](./LICENSE). Third-party dependencies retain their respective licenses.
