@@ -47,34 +47,29 @@
 
 ## Screenshots
 
-<p align="center"><sub>A look at Tinygram across conversations, settings, and everyday use.</sub></p>
+<p align="center"><sub>From everyday conversations to the details that make Tinygram your own.</sub></p>
 
-<table align="center">
-  <tr>
-    <td align="center"><img src="./documents/tinygram_home.jpeg" width="185" alt="Tinygram home and conversation list" /></td>
-    <td align="center"><img src="./documents/tinygram_chat.jpeg" width="185" alt="Tinygram chat interface" /></td>
-    <td align="center"><img src="./documents/tinygram_groups.jpeg" width="185" alt="Tinygram group conversations" /></td>
-    <td align="center"><img src="./documents/tinygram_apareance.jpeg" width="185" alt="Tinygram appearance settings" /></td>
-  </tr>
-  <tr>
-    <td align="center"><sub>Home</sub></td>
-    <td align="center"><sub>Chats</sub></td>
-    <td align="center"><sub>Groups</sub></td>
-    <td align="center"><sub>Appearance</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="./documents/tinygram_devices.jpeg" width="185" alt="Tinygram devices and sessions screen" /></td>
-    <td align="center"><img src="./documents/tinygram_storage.jpeg" width="185" alt="Tinygram storage settings" /></td>
-    <td align="center"><img src="./documents/tinygram_login.jpeg" width="185" alt="Tinygram sign-in screen" /></td>
-    <td></td>
-  </tr>
-  <tr>
-    <td align="center"><sub>Devices</sub></td>
-    <td align="center"><sub>Storage</sub></td>
-    <td align="center"><sub>Sign in</sub></td>
-    <td></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="./documents/tinygram_home.jpeg" width="220" alt="Tinygram — home and conversation list" />
+  &nbsp;
+  <img src="./documents/tinygram_chat.jpeg" width="220" alt="Tinygram — chat interface" />
+  &nbsp;
+  <img src="./documents/tinygram_groups.jpeg" width="220" alt="Tinygram — group conversations" />
+</p>
+
+<p align="center"><sub>Home · Chats · Groups</sub></p>
+
+<p align="center">
+  <img src="./documents/tinygram_apareance.jpeg" width="165" alt="Tinygram — appearance settings" />
+  &nbsp;
+  <img src="./documents/tinygram_devices.jpeg" width="165" alt="Tinygram — devices and sessions" />
+  &nbsp;
+  <img src="./documents/tinygram_storage.jpeg" width="165" alt="Tinygram — storage settings" />
+  &nbsp;
+  <img src="./documents/tinygram_login.jpeg" width="165" alt="Tinygram — sign-in screen" />
+</p>
+
+<p align="center"><sub>Appearance · Devices · Storage · Sign in</sub></p>
 
 ## Under the hood
 
