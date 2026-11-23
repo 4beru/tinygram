@@ -77,7 +77,7 @@ belong in Rust.
 - When a locale is not reasonably translatable from the available context,
   flag it explicitly instead of silently copying English. Keep locale files
   syntactically valid.
-- Keep translated README files aligned when documentation text changes.
+- Keep the single root `README.md` accurate when documentation or project behavior changes.
 
 ## Data, security, and protocol invariants
 
