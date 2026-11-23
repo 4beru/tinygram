@@ -95,14 +95,14 @@ Tinygram separates the presentation layer from the messaging protocol. Jetpack C
 
 | Directory | Purpose |
 | --- | --- |
-| \`app/\` | Android entry point, navigation, and application integration |
-| \`feature/\` | Authentication, chats, dialogs, folders, profiles, and settings |
-| \`core/\` | Shared UI, models, persistence, and utilities |
-| \`network/\` | Kotlin protocol bridge, HTTP transfers, and media cache |
-| \`native/mtproto-rs/\` | Rust MTProto client and UniFFI exports |
-| \`native/markup-rs/\` | Markdown parsing, code highlighting, and math extraction |
-| \`native/mtproto/\`, \`native/markup/\` | Kotlin/native integration and generated bindings |
-| \`vendor/\` | Pinned third-party dependencies and Git submodules |
+| `app/` | Android entry point, navigation, and application integration |
+| `feature/` | Authentication, chats, dialogs, folders, profiles, and settings |
+| `core/` | Shared UI, models, persistence, and utilities |
+| `network/` | Kotlin protocol bridge, HTTP transfers, and media cache |
+| `native/mtproto-rs/` | Rust MTProto client and UniFFI exports |
+| `native/markup-rs/` | Markdown parsing, code highlighting, and math extraction |
+| `native/mtproto/`, `native/markup/` | Kotlin/native integration and generated bindings |
+| `vendor/` | Pinned third-party dependencies and Git submodules |
 
 UI features depend on the Kotlin bridge rather than generated UniFFI types. See [AGENTS.md](./AGENTS.md) for development conventions and architectural boundaries.
 
@@ -115,73 +115,73 @@ UI features depend on the Kotlin bridge rather than generated UniFFI types. See 
 - Android Studio or a compatible Android SDK/Gradle environment
 - Android SDK Platform **37**, Android NDK **r28c** (28.2.13676358)
 - **JDK 17** for the launcher/source compatibility and **JDK 25** for the configured Gradle daemon
-- **Rust 1.98+**, Cargo, \`cargo-ndk\`, and the Android Rust targets
+- **Rust 1.98+**, Cargo, `cargo-ndk`, and the Android Rust targets
 
 On Linux, the repository includes a reproducible [devenv configuration](./devenv.nix) that provisions the required Android and Rust toolchains. With Nix and devenv installed:
 
-\`\`\`bash
+```bash
 git clone --recurse-submodules https://github.com/4beru/tinygram.git
 cd tinygram
 devenv shell
-\`\`\`
+```
 
-If you use Android Studio or manage toolchains yourself, clone with \`--recurse-submodules\`, install the prerequisites above, and use the Gradle wrapper from the repository root.
+If you use Android Studio or manage toolchains yourself, clone with `--recurse-submodules`, install the prerequisites above, and use the Gradle wrapper from the repository root.
 
 ### Configure your Telegram credentials
 
-Copy \`local.properties.example\` to \`local.properties\` and set the Android SDK path along with your own \`API_ID\` and \`API_HASH\` from [my.telegram.org/apps](https://my.telegram.org/apps).
+Copy `local.properties.example` to `local.properties` and set the Android SDK path along with your own `API_ID` and `API_HASH` from [my.telegram.org/apps](https://my.telegram.org/apps).
 
-\`\`\`bash
+```bash
 cp local.properties.example local.properties
-\`\`\`
+```
 
-The project can build without Telegram credentials, but signing in requires valid values. Never commit \`local.properties\`, signing keys, or service credentials.
+The project can build without Telegram credentials, but signing in requires valid values. Never commit `local.properties`, signing keys, or service credentials.
 
-On Linux, the included \`tinygram-configure\` helper can configure local credentials from \`pass\` if you've set up the documented entries. See the [local development guide](./documents/DEVELOPMENT_ES.md) for the reproducible environment and USB-device workflow.
+On Linux, the included `tinygram-configure` helper can configure local credentials from `pass` if you've set up the documented entries. See the [local development guide](./documents/DEVELOPMENT_ES.md) for the reproducible environment and USB-device workflow.
 
 ### Compile and install
 
-\`\`\`bash
+```bash
 ./gradlew :app:assembleDebug
 ./gradlew :app:installDebug
-\`\`\`
+```
 
 The install task requires a connected Android device or emulator. To reduce native build work for a particular device, you can select an ABI, for example:
 
-\`\`\`bash
+```bash
 ./gradlew :app:installDebug -PtargetAbi=arm64-v8a
-\`\`\`
+```
 
-Gradle builds the native Rust libraries and UniFFI bindings as part of the normal process. For distribution variants, use \`./gradlew :app:assembleRelease\` or \`./gradlew :app:assembleBeta\`. Release signing must be configured separately; otherwise, the project currently falls back to debug signing. Windows users can replace \`./gradlew\` with \`gradlew.bat\`.
+Gradle builds the native Rust libraries and UniFFI bindings as part of the normal process. For distribution variants, use `./gradlew :app:assembleRelease` or `./gradlew :app:assembleBeta`. Release signing must be configured separately; otherwise, the project currently falls back to debug signing. Windows users can replace `./gradlew` with `gradlew.bat`.
 
-> **Implementation note:** Some internal names still reflect the upstream codebase. In particular, the Android application ID is currently \`org.monogram\` (\`org.monogram.debug\` for debug builds).
+> **Implementation note:** Some internal names still reflect the upstream codebase. In particular, the Android application ID is currently `org.monogram` (`org.monogram.debug` for debug builds).
 
 <details>
 <summary><strong>Native markup module</strong></summary>
 
-The Rust \`native/markup-rs\` crate provides Telegram Markdown/entity parsing, block rendering, syntax highlighting, and math extraction to Kotlin via UniFFI.
+The Rust `native/markup-rs` crate provides Telegram Markdown/entity parsing, block rendering, syntax highlighting, and math extraction to Kotlin via UniFFI.
 
 | API | Role |
 | --- | --- |
-| \`parse_telegram_markdown\` | Plain text and Telegram entities |
-| \`render_blocks\` | Markdown structures for local display |
-| \`highlight_code\` | Lexical code highlighting |
-| \`extract_math\` | Inline and block math spans |
-| \`supported_highlight_languages\` | Supported highlight identifiers |
-| \`library_version\` | Crate version |
+| `parse_telegram_markdown` | Plain text and Telegram entities |
+| `render_blocks` | Markdown structures for local display |
+| `highlight_code` | Lexical code highlighting |
+| `extract_math` | Inline and block math spans |
+| `supported_highlight_languages` | Supported highlight identifiers |
+| `library_version` | Crate version |
 
 Entity and syntax spans use UTF-16 offsets. Highlighting is lexical rather than semantic; oversized inputs fall back to unformatted text. Host tests and a standalone native build can be run with:
 
-\`\`\`bash
+```bash
 cargo test --manifest-path native/markup-rs/Cargo.toml
 ./gradlew :native:markup:buildNativeMarkup
-\`\`\`
+```
 
 </details>
 
 ## Contributing
 
-Contributions are welcome. Branch from \`develop\` and open pull requests against \`develop\`. Keep changes focused, follow the existing module boundaries, and include relevant tests or verification. Please respect the [Telegram API Terms of Service](https://core.telegram.org/api/terms).
+Contributions are welcome. Branch from `develop` and open pull requests against `develop`. Keep changes focused, follow the existing module boundaries, and include relevant tests or verification. Please respect the [Telegram API Terms of Service](https://core.telegram.org/api/terms).
 
 ## Credits & license
 
