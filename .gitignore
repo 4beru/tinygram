@@ -22,6 +22,7 @@ replay_pid*
 build/
 **/build/
 local.properties
+.local.properties.*
 .idea/
 *.iml
 .cxx/
@@ -45,6 +46,10 @@ native/*/src/main/jniLibs/**/*.so.pending
 Thumbs.db
 
 # Secrets / local agent state
+.devenv*
+.direnv/
+devenv.local.nix
+devenv.local.yaml
 .pi*/
 *.keystore
 *.jks

@@ -36,7 +36,10 @@ import uniffi.monogram_mtproto.UpdatesStateDto
 import uniffi.monogram_mtproto.UploadItemDto
 import uniffi.monogram_mtproto.uniffiEnsureInitialized
 import java.io.File
+import uniffi.monogram_mtproto.acceptLoginToken as nativeAcceptLoginToken
+import uniffi.monogram_mtproto.acknowledgeUpdateBatch as nativeAcknowledgeUpdateBatch
 import uniffi.monogram_mtproto.animatedEmojiMax as nativeAnimatedEmojiMax
+import uniffi.monogram_mtproto.apiLayer as nativeApiLayer
 import uniffi.monogram_mtproto.appendTodoItems as nativeAppendTodoItems
 import uniffi.monogram_mtproto.checkPassword as nativeCheckPassword
 import uniffi.monogram_mtproto.clearActiveDialog as nativeClearActiveDialog
@@ -55,9 +58,7 @@ import uniffi.monogram_mtproto.destroyClient as nativeDestroyClient
 import uniffi.monogram_mtproto.downloadCustomEmoji as nativeDownloadCustomEmoji
 import uniffi.monogram_mtproto.downloadMessageMedia as nativeDownloadMessageMedia
 import uniffi.monogram_mtproto.downloadMessageThumb as nativeDownloadMessageThumb
-import uniffi.monogram_mtproto.acknowledgeUpdateBatch as nativeAcknowledgeUpdateBatch
 import uniffi.monogram_mtproto.drainUpdates as nativeDrainUpdates
-import uniffi.monogram_mtproto.pendingUpdateBatches as nativePendingUpdateBatches
 import uniffi.monogram_mtproto.editForumTopicHidden as nativeEditForumTopicHidden
 import uniffi.monogram_mtproto.editTextMessage as nativeEditTextMessage
 import uniffi.monogram_mtproto.forwardMessages as nativeForwardMessages
@@ -65,6 +66,7 @@ import uniffi.monogram_mtproto.getAllStickers as nativeGetAllStickers
 import uniffi.monogram_mtproto.getBotCallbackAnswer as nativeGetBotCallbackAnswer
 import uniffi.monogram_mtproto.getChats as nativeGetChats
 import uniffi.monogram_mtproto.getCommonChats as nativeGetCommonChats
+import uniffi.monogram_mtproto.getDeviceSessions as nativeGetDeviceSessions
 import uniffi.monogram_mtproto.getDiscussionMessage as nativeGetDiscussionMessage
 import uniffi.monogram_mtproto.getEmojiStickers as nativeGetEmojiStickers
 import uniffi.monogram_mtproto.getFolders as nativeGetFolders
@@ -104,6 +106,7 @@ import uniffi.monogram_mtproto.logout as nativeLogout
 import uniffi.monogram_mtproto.markDialogUnread as nativeMarkDialogUnread
 import uniffi.monogram_mtproto.peekMessageInlineThumb as nativePeekMessageInlineThumb
 import uniffi.monogram_mtproto.peekPeerInlineThumb as nativePeekPeerInlineThumb
+import uniffi.monogram_mtproto.pendingUpdateBatches as nativePendingUpdateBatches
 import uniffi.monogram_mtproto.pingProxy as nativePingProxy
 import uniffi.monogram_mtproto.readDiscussion as nativeReadDiscussion
 import uniffi.monogram_mtproto.readHistory as nativeReadHistory
@@ -114,6 +117,7 @@ import uniffi.monogram_mtproto.registerDevice as nativeRegisterDevice
 import uniffi.monogram_mtproto.resendAuthCode as nativeResendAuthCode
 import uniffi.monogram_mtproto.resetNotifySettings as nativeResetNotifySettings
 import uniffi.monogram_mtproto.resolveUsername as nativeResolveUsername
+import uniffi.monogram_mtproto.revokeDeviceSession as nativeRevokeDeviceSession
 import uniffi.monogram_mtproto.searchGlobal as nativeSearchGlobal
 import uniffi.monogram_mtproto.searchMessages as nativeSearchMessages
 import uniffi.monogram_mtproto.searchMessagesFiltered as nativeSearchMessagesFiltered
@@ -127,6 +131,9 @@ import uniffi.monogram_mtproto.sendReaction as nativeSendReaction
 import uniffi.monogram_mtproto.sendSavedGif as nativeSendSavedGif
 import uniffi.monogram_mtproto.sendTextMessage as nativeSendTextMessage
 import uniffi.monogram_mtproto.sendUploadedAlbum as nativeSendUploadedAlbum
+import uniffi.monogram_mtproto.sendUploadedAlbumWithOptions as nativeSendUploadedAlbumWithOptions
+import uniffi.monogram_mtproto.sendUploadedMediaWithOptions as nativeSendUploadedMediaWithOptions
+import uniffi.monogram_mtproto.replaceUploadedMedia as nativeReplaceUploadedMedia
 import uniffi.monogram_mtproto.sendUploadedMedia as nativeSendUploadedMedia
 import uniffi.monogram_mtproto.setClientTestDc as nativeSetClientTestDc
 import uniffi.monogram_mtproto.setContactJoinedSilent as nativeSetContactJoinedSilent
@@ -146,6 +153,20 @@ import uniffi.monogram_mtproto.updateNotifySettings as nativeUpdateNotifySetting
 import uniffi.monogram_mtproto.updateStatus as nativeUpdateStatus
 
 object MtprotoNativeUniFfi : MtprotoNative {
+    override fun getDeviceSessions(handle: Long) = nativeGetDeviceSessions(handle.toULong())
+    override fun acceptLoginToken(handle: Long, token: ByteArray) = nativeAcceptLoginToken(handle.toULong(), token)
+    override fun revokeDeviceSession(handle: Long, hash: Long) = nativeRevokeDeviceSession(handle.toULong(), hash)
+    override fun passkeysEnabled(handle: Long) = uniffi.monogram_mtproto.passkeysEnabled(handle.toULong())
+    override fun initPasskeyLogin(handle: Long) = uniffi.monogram_mtproto.initPasskeyLogin(handle.toULong())
+    override fun finishPasskeyLogin(handle: Long, credential: uniffi.monogram_mtproto.PasskeyCredentialDto, dcId: Int, authKeyId: Long) = uniffi.monogram_mtproto.finishPasskeyLogin(handle.toULong(), credential, dcId, authKeyId)
+    override fun initPasskeyRegistration(handle: Long) = uniffi.monogram_mtproto.initPasskeyRegistration(handle.toULong())
+    override fun registerPasskey(handle: Long, credential: uniffi.monogram_mtproto.PasskeyCredentialDto) = uniffi.monogram_mtproto.registerPasskey(handle.toULong(), credential)
+    override fun getPasskeys(handle: Long) = uniffi.monogram_mtproto.getPasskeys(handle.toULong())
+    override fun deletePasskey(handle: Long, id: String) = uniffi.monogram_mtproto.deletePasskey(handle.toULong(), id)
+
+    override fun exportLoginToken(handle: Long) = uniffi.monogram_mtproto.exportLoginToken(handle.toULong())
+    override fun pollLoginToken(handle: Long) = uniffi.monogram_mtproto.pollLoginToken(handle.toULong())
+
     override fun downloadMessageMediaChunk(handle: Long, chatId: Long, messageId: Int, destPath: String, offset: Long): String =
         uniffi.monogram_mtproto.downloadMessageMediaChunk(handle.toULong(), chatId, messageId, destPath, offset)
     override fun createRequestControl(): Long = uniffi.monogram_mtproto.createRequestControl().toLong()
@@ -202,6 +223,8 @@ object MtprotoNativeUniFfi : MtprotoNative {
     override fun clearProxy() = nativeClearProxy()
 
     override fun libraryVersion(): String = nativeLibraryVersion()
+
+    override fun apiLayer(): Int = nativeApiLayer().toInt()
 
     override fun setInitConnectionInfo(
         deviceModel: String,
@@ -312,6 +335,9 @@ object MtprotoNativeUniFfi : MtprotoNative {
 
     override fun getHistory(handle: Long, chatId: Long, limit: Int): List<MessageDto> =
         nativeGetHistory(handle.toULong(), chatId, limit)
+
+    override fun getMessage(handle: Long, chatId: Long, messageId: Int): MessageDto? =
+        uniffi.monogram_mtproto.getMessage(handle.toULong(), chatId, messageId)
 
     override fun getHistoryPage(
         handle: Long,
@@ -453,6 +479,12 @@ object MtprotoNativeUniFfi : MtprotoNative {
     ): ReadParticipantsDto =
         nativeGetMessageReadParticipants(handle.toULong(), chatId, msgId)
 
+    override fun getMessageReactionsPage(handle: Long, chatId: Long, messageId: Int, offset: String?) =
+        uniffi.monogram_mtproto.getMessageReactionsPage(handle.toULong(), chatId, messageId, offset)
+
+    override fun getPollVotesPage(handle: Long, chatId: Long, messageId: Int, offset: String?) =
+        uniffi.monogram_mtproto.getPollVotesPage(handle.toULong(), chatId, messageId, offset)
+
     override fun getMessageReactionsList(
         handle: Long,
         chatId: Long,
@@ -475,6 +507,60 @@ object MtprotoNativeUniFfi : MtprotoNative {
 
     override fun getReadReceiptConfig(handle: Long): ReadReceiptConfigDto =
         nativeGetReadReceiptConfig(handle.toULong())
+
+    override fun importContacts(handle: Long, contacts: List<uniffi.monogram_mtproto.ContactImportSpec>) =
+        uniffi.monogram_mtproto.importContacts(handle.toULong(), contacts)
+
+    override fun sendLocationWithOptions(handle:Long,chatId:Long,spec:uniffi.monogram_mtproto.LocationSendSpec,replyToMsgId:Int,topMsgId:Int,randomId:Long,options:uniffi.monogram_mtproto.SendOptions) =
+        uniffi.monogram_mtproto.sendLocationWithOptions(handle.toULong(),chatId,spec,replyToMsgId,topMsgId,randomId,options)
+    override fun sendContactWithOptions(handle: Long, chatId: Long, spec: uniffi.monogram_mtproto.ContactSendSpec, replyToMsgId: Int, topMsgId: Int,
+        randomId: Long, options: uniffi.monogram_mtproto.SendOptions) =
+        uniffi.monogram_mtproto.sendContactWithOptions(handle.toULong(), chatId, spec, replyToMsgId, topMsgId, randomId, options)
+
+    override fun sendChecklistWithOptions(handle: Long, chatId: Long, spec: uniffi.monogram_mtproto.ChecklistSendSpec, replyToMsgId: Int, topMsgId: Int,
+        randomId: Long, options: uniffi.monogram_mtproto.SendOptions) =
+        uniffi.monogram_mtproto.sendChecklistWithOptions(handle.toULong(), chatId, spec, replyToMsgId, topMsgId, randomId, options)
+
+    override fun sendPollWithOptions(handle: Long, chatId: Long, spec: uniffi.monogram_mtproto.PollSendSpec, replyToMsgId: Int, topMsgId: Int,
+        randomId: Long, options: uniffi.monogram_mtproto.SendOptions) =
+        uniffi.monogram_mtproto.sendPollWithOptions(handle.toULong(), chatId, spec, replyToMsgId, topMsgId, randomId, options)
+
+    override fun sendDiceWithOptions(handle: Long, chatId: Long, emoticon: String, replyToMsgId: Int, topMsgId: Int,
+        randomId: Long, options: uniffi.monogram_mtproto.SendOptions) =
+        uniffi.monogram_mtproto.sendDiceWithOptions(handle.toULong(), chatId, emoticon, replyToMsgId, topMsgId, randomId, options)
+
+    override fun sendTextMessageWithOptions(
+        handle: Long, chatId: Long, text: String, replyToMsgId: Int,
+        entitiesJson: String?, topMsgId: Int, webpageUrl: String?, randomId: Long,
+        options: uniffi.monogram_mtproto.SendOptions,
+    ): uniffi.monogram_mtproto.OutgoingMessageResult = uniffi.monogram_mtproto.sendTextMessageWithOptions(
+        handle.toULong(), chatId, text, replyToMsgId, entitiesJson, topMsgId, webpageUrl, randomId, options,
+    )
+
+    override fun getScheduledHistory(handle: Long, chatId: Long): List<uniffi.monogram_mtproto.ScheduledMessageDto> =
+        uniffi.monogram_mtproto.getScheduledHistory(handle.toULong(), chatId)
+
+    override fun getScheduledMessages(handle: Long, chatId: Long, ids: List<Int>): List<uniffi.monogram_mtproto.ScheduledMessageDto> =
+        uniffi.monogram_mtproto.getScheduledMessages(handle.toULong(), chatId, ids)
+
+    override fun sendScheduledMessages(handle: Long, chatId: Long, ids: List<Int>) =
+        uniffi.monogram_mtproto.sendScheduledMessages(handle.toULong(), chatId, ids)
+
+    override fun deleteScheduledMessages(handle: Long, chatId: Long, ids: List<Int>) =
+        uniffi.monogram_mtproto.deleteScheduledMessages(handle.toULong(), chatId, ids)
+
+    override fun editScheduledMessage(
+        handle: Long, chatId: Long, messageId: Int, scheduleDate: Int,
+        text: String?, entitiesJson: String?, noWebpage: Boolean,
+    ) = uniffi.monogram_mtproto.editScheduledMessage(
+        handle.toULong(), chatId, messageId, scheduleDate, text, entitiesJson, noWebpage,
+    )
+
+    override fun getCloudDrafts(handle: Long): List<uniffi.monogram_mtproto.CloudDraft> =
+        uniffi.monogram_mtproto.getCloudDrafts(handle.toULong())
+
+    override fun saveCloudDraft(handle: Long, draft: uniffi.monogram_mtproto.CloudDraft) =
+        uniffi.monogram_mtproto.saveCloudDraft(handle.toULong(), draft)
 
     override fun sendTextMessage(
         handle: Long,
@@ -508,6 +594,9 @@ object MtprotoNativeUniFfi : MtprotoNative {
     ): MessageDto =
         nativeSendPhotoMessage(handle.toULong(), chatId, path, caption, replyToMsgId, topMsgId, entitiesJson)
 
+    override fun replaceUploadedMedia(handle:Long,chatId:Long,messageId:Int,expectedKey:String,item:UploadItemDto):MessageDto =
+        nativeReplaceUploadedMedia(handle.toULong(),chatId,messageId,expectedKey,item)
+
     override fun sendUploadedMedia(
         handle: Long,
         chatId: Long,
@@ -539,6 +628,18 @@ object MtprotoNativeUniFfi : MtprotoNative {
             replyToMsgId,
             topMsgId,
         )
+
+    override fun sendUploadedMediaWithOptions(
+        handle: Long, chatId: Long, item: UploadItemDto, replyToMsgId: Int, topMsgId: Int,
+        entitiesJson: String?, options: uniffi.monogram_mtproto.SendOptions,
+    ): uniffi.monogram_mtproto.OutgoingMessageResult = nativeSendUploadedMediaWithOptions(
+        handle.toULong(), chatId, item, replyToMsgId, topMsgId, entitiesJson, options)
+
+    override fun sendUploadedAlbumWithOptions(
+        handle: Long, chatId: Long, items: List<UploadItemDto>, replyToMsgId: Int, topMsgId: Int,
+        options: uniffi.monogram_mtproto.SendOptions,
+    ): List<uniffi.monogram_mtproto.OutgoingMessageResult> = nativeSendUploadedAlbumWithOptions(
+        handle.toULong(), chatId, items, replyToMsgId, topMsgId, options)
 
     override fun editTextMessage(
         handle: Long,
@@ -675,6 +776,7 @@ object MtprotoNativeUniFfi : MtprotoNative {
             joined = joined.joined,
             canSendPlain = joined.canSendPlain,
             canSendPhotos = joined.canSendPhotos,
+            canSendPolls = joined.canSendPolls,
         )
     }
 
@@ -847,6 +949,8 @@ object MtprotoNativeUniFfi : MtprotoNative {
         nativeToggleTodoCompleted(handle.toULong(), chatId, messageId, completed, incompleted)
     }
 
+    override fun editLiveLocation(handle:Long,chatId:Long,messageId:Int,latitude:Double?,longitude:Double?,heading:Int?,stopped:Boolean) =
+        uniffi.monogram_mtproto.editLiveLocation(handle.toULong(),chatId,messageId,latitude,longitude,heading,stopped)
     override fun sendLocation(
         handle: Long,
         chatId: Long,
@@ -866,6 +970,17 @@ object MtprotoNativeUniFfi : MtprotoNative {
             replyToMsgId,
         )
     }
+
+    override fun removeChecklistItem(handle:Long,chatId:Long,messageId:Int,edit:uniffi.monogram_mtproto.ChecklistTextEditDto) =
+        uniffi.monogram_mtproto.removeChecklistItem(handle.toULong(),chatId,messageId,edit)
+    override fun editChecklistText(handle: Long, chatId: Long, messageId: Int, edit: uniffi.monogram_mtproto.ChecklistTextEditDto) =
+        uniffi.monogram_mtproto.editChecklistText(handle.toULong(),chatId,messageId,edit)
+
+    override fun editChecklistTitle(handle: Long, chatId: Long, messageId: Int, title: String) =
+        uniffi.monogram_mtproto.editChecklistTitle(handle.toULong(), chatId, messageId, title)
+
+    override fun closePoll(handle: Long, chatId: Long, messageId: Int) =
+        uniffi.monogram_mtproto.closePoll(handle.toULong(), chatId, messageId)
 
     override fun sendPollVote(
         handle: Long,

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="auth_brand">Tinygram</string>
     <string name="auth_title">Telegram\'a giriş</string>
     <string name="auth_subtitle">Telefon numaranızı girin</string>
     <string name="auth_phone_label">Telefon numarası</string>
@@ -44,4 +45,12 @@
     <string name="auth_paste_empty">Pano boş</string>
     <string name="auth_paste_code">Kodu yapıştır</string>
     <string name="auth_connection">Bağlantı ayarları</string>
+    <string name="auth_qr_login">QR Koduyla Giriş Yap</string>
+    <string name="auth_qr_instructions">Diğer cihazınızda Telegram uygulamasını açın. Ayarlar bölümünde Cihazlar sayfasını açın, Cihaz Bağla seçeneğine dokunun ve bu kodu tarayın.</string>
+    <string name="auth_qr_code">Telegram giriş QR kodu</string>
+    <string name="auth_qr_retry">Tekrar Dene</string>
+    <string name="auth_qr_use_phone">Telefon Numarasıyla Giriş Yap</string>
+    <string name="auth_passkey_login">Geçiş anahtarıyla giriş yap</string>
+    <string name="auth_passkey_error">Geçiş anahtarı kullanılamıyor. Sağlayıcıyı ve uygulama güven ayarlarını kontrol edip yeniden deneyin</string>
+    <string name="auth_passkey_missing">Telegram geçiş anahtarı bulunamadı. Başka bir sağlayıcı seçin veya telefon ya da QR ile giriş yapın</string>
 </resources>

@@ -19,6 +19,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.monogram.core.common.AppLog
 import org.monogram.core.common.Outcome
+import org.monogram.core.common.PerfLog
 import org.monogram.core.common.push.NotificationLocalStore
 import org.monogram.core.common.telegram.TelegramError
 import org.monogram.core.database.ChatCacheCursor
@@ -55,10 +56,25 @@ internal class ChatsExecutor(
     private val notifications: NotificationLocalStore?,
     private val refreshMergeHook: (suspend () -> Unit)? = null,
     private val readStateHook: (suspend () -> Unit)? = null,
+    private val ioContext: kotlin.coroutines.CoroutineContext = Dispatchers.IO,
 ) : CoroutineExecutor<ChatsStore.Intent, Unit, ChatsStore.State, Msg, Nothing>() {
     private val refreshInFlight = AtomicBoolean(false)
+    private var pendingRefresh = false
+    private var pendingRefreshForce = false
     private val listPublicationMutex = Mutex()
     private var lastNetworkPage: List<Chat> = emptyList()
+    private var refreshSyncing = false
+    private var protocolSyncing = false
+
+    private fun publishSyncing() {
+        val syncing = refreshSyncing || protocolSyncing
+        if (state().syncing != syncing) dispatch(Msg.Syncing(syncing))
+    }
+
+    private fun setRefreshSyncing(value: Boolean) {
+        refreshSyncing = value
+        publishSyncing()
+    }
     private var mainNetworkHasMore = true
     private val failedOffsetPeers = mutableSetOf<Long>()
 
@@ -127,6 +143,11 @@ internal class ChatsExecutor(
         client.updates()
             .onEach { update ->
                 when (update) {
+                    is MtprotoUpdate.SyncState -> {
+                        protocolSyncing = update.isSyncing
+                        publishSyncing()
+                    }
+
                     is MtprotoUpdate.ChatsChanged -> {
                         if (update.chats.isNotEmpty()) {
                             val mapped = withEffectiveMutes(
@@ -143,7 +164,7 @@ internal class ChatsExecutor(
                                 val listed = allListed()
                                 refreshMergeHook?.invoke()
                                 val rebuilt = if (listed.size > 64) {
-                                    withContext(Dispatchers.IO) { mergeChats(listed, mapped) }
+                                    withContext(ioContext) { mergeChats(listed, mapped) }
                                 } else {
                                     mergeChats(listed, mapped)
                                 }
@@ -153,6 +174,7 @@ internal class ChatsExecutor(
                                     hasMore = null,
                                     keep = paintKeep(),
                                 )
+                                val rebuiltById = rebuilt.associateBy { it.id }
                                 changed = mapped.filter { row ->
                                     val previous = before[row.id.value] ?: return@filter true
                                     previous.muted != row.muted ||
@@ -163,7 +185,7 @@ internal class ChatsExecutor(
                                             previous.archived != row.archived ||
                                             previous.pinned != row.pinned ||
                                             (row.pinnedOrder != Int.MAX_VALUE && previous.pinnedOrder != row.pinnedOrder)
-                                }.map { row -> rebuilt.firstOrNull { it.id == row.id } ?: row }
+                                }.map { row -> rebuiltById[row.id] ?: row }
                             }
                             if (changed.isNotEmpty()) scope.launch { warmup?.upsertChats(changed) }
                         }
@@ -555,7 +577,7 @@ internal class ChatsExecutor(
         if (message.outgoing) return message
         if (!message.senderName.isNullOrBlank()) return message
         val senderId = message.senderId?.value ?: return message
-        val title = withContext(Dispatchers.IO) {
+        val title = withContext(ioContext) {
             sessionStore?.readProfile(senderId)?.title?.trim().orEmpty()
         }
         return if (title.isEmpty()) message else message.copy(senderName = title)
@@ -582,8 +604,22 @@ internal class ChatsExecutor(
         }
     }
 
+    private suspend fun getChatsTimed(label: String): Outcome<List<Chat>> {
+        if (!PerfLog.isEnabled()) return client.getChats()
+        val startedAt = PerfLog.nowMs()
+        return try {
+            client.getChats()
+        } finally {
+            PerfLog.mark("chats:$label", PerfLog.nowMs() - startedAt)
+        }
+    }
+
     private fun refresh(force: Boolean) {
-        if (!refreshInFlight.compareAndSet(false, true)) return
+        if (!refreshInFlight.compareAndSet(false, true)) {
+            pendingRefresh = true
+            pendingRefreshForce = pendingRefreshForce || force
+            return
+        }
         attemptedTitleRecovery.clear()
         val hasMemory = state().chats.isNotEmpty()
         if (!hasMemory) dispatch(Msg.Loading(true))
@@ -604,12 +640,12 @@ internal class ChatsExecutor(
                     val muted = muteChats(cached)
                     val (first, tail) = if (!hasMemory) {
                         if (muted.size > 64) {
-                            withContext(Dispatchers.IO) { paintDialogsWindow(muted) }
+                            withContext(ioContext) { paintDialogsWindow(muted) }
                         } else {
                             paintDialogsWindow(muted)
                         }
                     } else if (muted.size > 64) {
-                        withContext(Dispatchers.IO) { sortChats(muted) } to emptyList()
+                        withContext(ioContext) { sortChats(muted) } to emptyList()
                     } else {
                         sortChats(muted) to emptyList()
                     }
@@ -621,7 +657,7 @@ internal class ChatsExecutor(
                         ),
                     )
                     dispatch(Msg.Loading(false))
-                    dispatch(Msg.Syncing(true))
+                    setRefreshSyncing(true)
                     cachedTail = tail
                     recoverMissingTitles()
                     if (cachedTail.none { it.isMainListRow() }) {
@@ -652,18 +688,18 @@ internal class ChatsExecutor(
                 } else if (!hasMemory && cached.isEmpty() && !state().loading) {
                     dispatch(Msg.Loading(true))
                 } else if (hasMemory || cached.isNotEmpty()) {
-                    dispatch(Msg.Syncing(true))
+                    setRefreshSyncing(true)
                 }
                 // The first network page must already carry inherited mutes; a failure here is
                 // retried on the next refresh so a slow RPC never blocks the list.
                 if (!notifyDefaultsLoaded) loadNotifyDefaults()
-                var result = client.getChats()
+                var result = getChatsTimed("get")
                 if (result is Outcome.Err &&
                     state().chats.isNotEmpty() &&
                     !result.telegramError.requiresReauth
                 ) {
                     delay(400)
-                    result = client.getChats()
+                    result = getChatsTimed("retry")
                 }
                 when (result) {
                     is Outcome.Ok -> {
@@ -689,15 +725,16 @@ internal class ChatsExecutor(
                             val source = allListed()
                             refreshMergeHook?.invoke()
                             val merged = if (source.size > 64) {
-                                withContext(Dispatchers.IO) {
+                                withContext(ioContext) {
                                     withNetworkPinOrder(mergeChats(source, mapped), mapped)
                                 }
                             } else {
                                 withNetworkPinOrder(mergeChats(source, mapped), mapped)
                             }
                             persisted = merged
+                            val mergedById = merged.associateBy { it.id }
                             pruneRows = mapped.filter { net ->
-                                val local = merged.firstOrNull { it.id == net.id }
+                                val local = mergedById[net.id]
                                 local == null || net.lastMessageId >= local.lastMessageId
                             }
                             republishListedLocked(
@@ -746,9 +783,8 @@ internal class ChatsExecutor(
                     }
                 }
                 if (state().loading) dispatch(Msg.Loading(false))
-                if (state().syncing) dispatch(Msg.Syncing(false))
+                setRefreshSyncing(false)
                 catalogSeed?.let { seed ->
-                    refreshInFlight.set(false)
                     if (generation == catalogGeneration) {
                         fillDialogCatalog(generation, archived = false, seed = seed)
                         fillDialogCatalog(generation, archived = true, seed = emptyList())
@@ -758,9 +794,15 @@ internal class ChatsExecutor(
                 throw error
             } catch (_: Throwable) {
                 if (state().loading) dispatch(Msg.Loading(false))
-                if (state().syncing) dispatch(Msg.Syncing(false))
+                setRefreshSyncing(false)
             } finally {
                 refreshInFlight.set(false)
+                if (pendingRefresh) {
+                    val rerunForce = pendingRefreshForce
+                    pendingRefresh = false
+                    pendingRefreshForce = false
+                    refresh(rerunForce)
+                }
             }
         }
     }
@@ -1198,7 +1240,7 @@ internal class ChatsExecutor(
     ) {
         val archiveLimit = archiveKeep(merged)
         val (first, tail) = if (merged.size > 64) {
-            withContext(Dispatchers.IO) { paintDialogsWindow(merged, keep, archiveLimit) }
+            withContext(ioContext) { paintDialogsWindow(merged, keep, archiveLimit) }
         } else {
             paintDialogsWindow(merged, keep, archiveLimit)
         }
@@ -1313,7 +1355,7 @@ internal class ChatsExecutor(
             }
             persistHidden?.let { warmup?.upsertChats(listOf(it)) }
             if (published) return@launch
-            val stored = withContext(Dispatchers.IO) {
+            val stored = withContext(ioContext) {
                 warmup?.chat(message.id.chatId)
             } ?: return@launch
             if (!stored.isMainListRow()) {
@@ -1426,7 +1468,7 @@ internal class ChatsExecutor(
             withEffectiveMutes(chats, notifyDefaults, notifyDefaultsLoaded)
         }
         return if (chats.size > 64) {
-            withContext(Dispatchers.IO) { apply() }
+            withContext(ioContext) { apply() }
         } else {
             apply()
         }

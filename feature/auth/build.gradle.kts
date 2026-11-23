@@ -24,6 +24,8 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(project(":core:common"))
     implementation(project(":core:models"))
     implementation(libs.mvikotlin)
@@ -44,4 +46,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mvikotlin.main)
 }

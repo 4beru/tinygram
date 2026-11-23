@@ -1,186 +1,185 @@
-<h1 align="center">
-  <a href="https://github.com/monogram-android/monogram"><img width="130" height="130" alt="Monogram" src="./documents/monogram.png" /></a>
-  <br />Monogram
-</h1>
+<div align="center">
+  <img src="./documents/tinygram-logo.png" alt="Tinygram logo" width="112" />
+
+  <h1>Tinygram</h1>
+
+  <p><strong>A more thoughtful Telegram experience for Android.</strong></p>
+
+  <p>
+    Tinygram is an unofficial, native Telegram client built with Kotlin, Jetpack Compose,
+    and a Rust-powered MTProto core. Familiar messaging, a modern interface, and an
+    Android-first approach.
+  </p>
+
+  <p>
+    <img src="./documents/android-head_flat.png" alt="Android" width="20" height="20" />
+    &nbsp; Android 7.0+ &nbsp;·&nbsp; Kotlin + Compose &nbsp;·&nbsp; Rust + MTProto
+  </p>
+
+  <p>
+    <a href="./LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-4c7d91?style=flat-square" alt="License: GPL-3.0" /></a>
+    <img src="https://img.shields.io/badge/status-active%20development-4c7d91?style=flat-square" alt="Status: active development" />
+  </p>
+
+  <p>
+    <a href="#the-experience">Experience</a> &nbsp;·&nbsp;
+    <a href="#screenshots">Screenshots</a> &nbsp;·&nbsp;
+    <a href="#under-the-hood">Architecture</a> &nbsp;·&nbsp;
+    <a href="#build-from-source">Build</a>
+  </p>
+</div>
 
 <p align="center">
-  <a href="./LICENSE"><img alt="GPLv3" src="https://img.shields.io/badge/License-GPLv3-blue.svg" /></a>
-  <a href="https://github.com/monogram-android/monogram/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/monogram-android/monogram" /></a>
-  <a href="https://deepwiki.com/monogram-android/monogram"><img alt="Ask DeepWiki" src="https://deepwiki.com/badge.svg" /></a>
-  <img alt="Kotlin + Rust" src="https://img.shields.io/badge/Kotlin_+_Rust-MTProto-blue" />
-  <a href="https://boosty.to/monogram"><img alt="Boosty" src="https://img.shields.io/badge/Boosty-Support-ff6f61" /></a>
+  <img src="./documents/tinygram_eyecatch.png" alt="Tinygram — Android Telegram client showcase" width="960" />
 </p>
 
-<p align="center"><a href="README.md">English</a> · <a href="README_RU.md">Русский</a> · <a href="README_TR.md">Türkçe</a> · <a href="README_KOR.md">한국어</a> · <a href="README_UR.md">اُردو</a> · <a href="README_ES.md">Español</a></p>
+> [!NOTE]
+> Tinygram is in active development. Some functionality may be incomplete or change between builds. This is an independent, unofficial Telegram client and is not affiliated with Telegram.
 
-<p align="center"><strong>Monogram</strong> is a blazing-fast, fully native Telegram client for Android 7.0 and newer. Built with <strong>Kotlin</strong>, <strong>Jetpack Compose</strong>, and <strong>Material 3</strong>, it pairs a modern Android interface with <strong>our own MTProto implementation in Rust</strong></p>
+## The experience
 
-> [!IMPORTANT]
-> Monogram is in **active development**. Features and architecture are still evolving; bugs and incomplete behavior are possible.
-
-Support the project on [Boosty](https://boosty.to/monogram)
+- **Android, first.** A fully native interface built with Jetpack Compose and Material 3—not a web view or a port of another platform's UI.
+- **Conversations at the center.** Chats, groups, folders, and everyday messaging features, without unnecessary distractions.
+- **Designed for more screens.** Adaptive layouts for phones, tablets, and foldable devices.
+- **Rich media, naturally.** Photos, video, animated stickers, and in-conversation media experiences.
+- **Made to feel personal.** Appearance and layout options that let the interface fit your preferences.
+- **A fast native foundation.** Kotlin UI on top of Rust-based MTProto networking, connected through UniFFI.
 
 ## Screenshots
 
-<div align="center">
+<p align="center"><sub>From everyday conversations to the details that make Tinygram your own.</sub></p>
 
-| | | | |
-|:---:|:---:|:---:|:---:|
-| <img src="./documents/1.png" width="180" alt="Monogram 1" /> | <img src="./documents/2.png" width="180" alt="Monogram 2" /> | <img src="./documents/3.png" width="180" alt="Monogram 3" /> | <img src="./documents/4.png" width="180" alt="Monogram 4" /> |
+<p align="center">
+  <img src="./documents/tinygram_home.jpeg" width="220" alt="Tinygram — home and conversation list" />
+  &nbsp;
+  <img src="./documents/tinygram_chat.jpeg" width="220" alt="Tinygram — chat interface" />
+  &nbsp;
+  <img src="./documents/tinygram_groups.jpeg" width="220" alt="Tinygram — group conversations" />
+</p>
 
-</div>
+<p align="center"><sub>Home · Chats · Groups</sub></p>
 
-## Project highlights
+<p align="center">
+  <img src="./documents/tinygram_apareance.jpeg" width="165" alt="Tinygram — appearance settings" />
+  &nbsp;
+  <img src="./documents/tinygram_devices.jpeg" width="165" alt="Tinygram — devices and sessions" />
+  &nbsp;
+  <img src="./documents/tinygram_storage.jpeg" width="165" alt="Tinygram — storage settings" />
+  &nbsp;
+  <img src="./documents/tinygram_login.jpeg" width="165" alt="Tinygram — sign-in screen" />
+</p>
 
-- **Fully native** — Built for Android with Kotlin and Jetpack Compose
-- **Made for your screen** — Material 3 layouts that adapt to phones, tablets, and larger displays
-- **Your chats, with media** — Photos, videos, and animated stickers in your conversations
-- **Blazingly fast, powered by Rust** — Our own native implementation of Telegram's MTProto protocol 🚀
-- **No NFT or crypto** — Monogram will not include NFT promotions, gifts, or other Telegram features that we consider outside the scope of a messaging app
+<p align="center"><sub>Appearance · Devices · Storage · Sign in</sub></p>
+
+## Under the hood
+
+Tinygram separates the presentation layer from the messaging protocol. Jetpack Compose handles the Android experience; the Rust MTProto implementation provides the native client foundation.
+
+| Layer | Technology |
+| --- | --- |
+| Android UI | Kotlin, Jetpack Compose, Material 3 |
+| Navigation & state | Decompose, MVIKotlin, Coroutines, Flow |
+| Dependency injection & persistence | Koin, Room |
+| Telegram protocol | Rust, [mono-rs](https://github.com/monogram-android/mono-rs), UniFFI |
+| Media | Media3, Coil, libvpx, tlottie |
+| Notifications | Firebase Cloud Messaging, UnifiedPush |
+| Development environment | Gradle, Android SDK/NDK, Rust, [devenv](https://devenv.sh/) |
+
+<details>
+<summary><strong>Explore the project structure</strong></summary>
+
+| Directory | Purpose |
+| --- | --- |
+| `app/` | Android entry point, navigation, and application integration |
+| `feature/` | Authentication, chats, dialogs, folders, profiles, and settings |
+| `core/` | Shared UI, models, persistence, and utilities |
+| `network/` | Kotlin protocol bridge, HTTP transfers, and media cache |
+| `native/mtproto-rs/` | Rust MTProto client and UniFFI exports |
+| `native/markup-rs/` | Markdown parsing, code highlighting, and math extraction |
+| `native/mtproto/`, `native/markup/` | Kotlin/native integration and generated bindings |
+| `vendor/` | Pinned third-party dependencies and Git submodules |
+
+UI features depend on the Kotlin bridge rather than generated UniFFI types. See [AGENTS.md](./AGENTS.md) for development conventions and architectural boundaries.
+
+</details>
 
 ## Build from source
 
-### 1. Requirements
+### Requirements
 
-- **JDK 17** and an Android Studio version compatible with the project's Android Gradle Plugin (see [the version catalog](gradle/libs.versions.toml))
-- **Android SDK Platform 37**, platform tools, and an **Android NDK**. CI uses **NDK r28c**. Set `ANDROID_NDK_HOME` to select an NDK explicitly; otherwise Gradle looks under the SDK's `ndk` directory.
-- **Rust 1.98 or newer**, Cargo, and the host platform's C/C++ build tools for native dependencies and UniFFI generation
-- **Git**, the Android Rust targets below, and **cargo-ndk**:
+- Android Studio or a compatible Android SDK/Gradle environment
+- Android SDK Platform **37**, Android NDK **r28c** (28.2.13676358)
+- **JDK 17** for the launcher/source compatibility and **JDK 25** for the configured Gradle daemon
+- **Rust 1.98+**, Cargo, `cargo-ndk`, and the Android Rust targets
 
-```console
-rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
-cargo install cargo-ndk --locked
+On Linux, the repository includes a reproducible [devenv configuration](./devenv.nix) that provisions the required Android and Rust toolchains. With Nix and devenv installed:
+
+```bash
+git clone --recurse-submodules https://github.com/4beru/tinygram.git
+cd tinygram
+devenv shell
 ```
 
-### 2. Clone the repositories
+If you use Android Studio or manage toolchains yourself, clone with `--recurse-submodules`, install the prerequisites above, and use the Gradle wrapper from the repository root.
 
-```console
-git clone --recurse-submodules https://github.com/monogram-android/monogram.git
-git clone --recurse-submodules https://github.com/gdlbo/telers-mtproto-impl.git
-cd monogram
-git submodule update --init --recursive
-```
+### Configure your Telegram credentials
 
-Run both clone commands from the same parent directory. The current Cargo manifests require `../telers-mtproto-impl` next to the Monogram checkout; the submodule under `vendor` does not replace this sibling checkout. CI uses the same layout.
+Copy `local.properties.example` to `local.properties` and set the Android SDK path along with your own `API_ID` and `API_HASH` from [my.telegram.org/apps](https://my.telegram.org/apps).
 
-### 3. Configure local settings
-
-Copy [local.properties.example](local.properties.example) to `local.properties`, then set `sdk.dir`, `API_ID`, and `API_HASH`.
-
-Unix-like systems:
-
-```sh
+```bash
 cp local.properties.example local.properties
 ```
 
-Windows (PowerShell):
+The project can build without Telegram credentials, but signing in requires valid values. Never commit `local.properties`, signing keys, or service credentials.
 
-```powershell
-Copy-Item local.properties.example local.properties
-```
+On Linux, the included `tinygram-configure` helper can configure local credentials from `pass` if you've set up the documented entries. See the [local development guide](./documents/DEVELOPMENT_ES.md) for the reproducible environment and USB-device workflow.
 
-Obtain your API credentials from [my.telegram.org/apps](https://my.telegram.org/apps). Builds can be produced without them, but Telegram login requires valid credentials. Keep `local.properties`, signing keys, and service-account credentials untracked; never include them in logs or commits.
+### Compile and install
 
-For your own release signing key, also set:
-
-```properties
-RELEASE_STORE_FILE=keystore/release.jks
-RELEASE_STORE_PASSWORD=your_store_password
-RELEASE_KEY_ALIAS=your_key_alias
-RELEASE_KEY_PASSWORD=your_key_password
-```
-
-Without `RELEASE_STORE_FILE`, release and beta builds use the debug signing key by default. `-Punsigned=true` disables that fallback when no release key is configured. Debug-signed builds are for development, not distribution under your production signing identity.
-
-### 4. Configure push notifications (optional)
-
-- **FCM:** Register a Firebase Android app for `org.monogram` (the same application ID is used for debug, release, and beta). Place its configuration at `app/google-services.json`; Gradle applies the Google Services plugin only when this file exists. Firebase dependencies remain part of the app even without the configuration file.
-- Register the corresponding FCM credentials for your Telegram API ID at [my.telegram.org/apps](https://my.telegram.org/apps). Keep `google-services.json` and any `firebase-adminsdk` JSON untracked; never package a service-account key in the APK.
-- FCM testing requires Google Play services; use a Google Play emulator image for emulator checks
-- **UnifiedPush:** Install and configure a compatible distributor on the device. The app includes UnifiedPush registration support.
-
-### 5. Build and run
-
-Open the repository in Android Studio, sync Gradle, and select the `app` run configuration, or use the commands below from the repository root. `installDebug` requires a connected device or a running emulator.
-
-Unix-like systems:
-
-```sh
+```bash
 ./gradlew :app:assembleDebug
 ./gradlew :app:installDebug
-./gradlew :app:assembleRelease
-./gradlew :app:assembleBeta
 ```
 
-Windows (PowerShell):
+The install task requires a connected Android device or emulator. To reduce native build work for a particular device, you can select an ABI, for example:
 
-```powershell
-./gradlew.bat :app:assembleDebug
-./gradlew.bat :app:installDebug
-./gradlew.bat :app:assembleRelease
-./gradlew.bat :app:assembleBeta
+```bash
+./gradlew :app:installDebug -PtargetAbi=arm64-v8a
 ```
 
-- `debug`: development build
-- `release`: optimized build with R8
-- `beta`: release-derived build with R8 disabled for easier debugging
+Gradle builds the native Rust libraries and UniFFI bindings as part of the normal process. For distribution variants, use `./gradlew :app:assembleRelease` or `./gradlew :app:assembleBeta`. Release signing must be configured separately; otherwise, the project currently falls back to debug signing. Windows users can replace `./gradlew` with `gradlew.bat`.
 
+> **Implementation note:** Some internal names still reflect the upstream codebase. In particular, the Android application ID is currently `org.monogram` (`org.monogram.debug` for debug builds).
 
-### Native compilation
+<details>
+<summary><strong>Native markup module</strong></summary>
 
-Gradle builds the Rust libraries for `armeabi-v7a`, `arm64-v8a`, and `x86_64` and regenerates UniFFI Kotlin bindings from host debug libraries as part of the normal build. Prebuilt libvpx libraries are included under `native/vpx/prebuilt` for video stickers. To invoke the Android native compilation tasks directly:
+The Rust `native/markup-rs` crate provides Telegram Markdown/entity parsing, block rendering, syntax highlighting, and math extraction to Kotlin via UniFFI.
 
-```sh
-./gradlew :native:mtproto:buildNativeMtproto :native:markup:buildNativeMarkup
+| API | Role |
+| --- | --- |
+| `parse_telegram_markdown` | Plain text and Telegram entities |
+| `render_blocks` | Markdown structures for local display |
+| `highlight_code` | Lexical code highlighting |
+| `extract_math` | Inline and block math spans |
+| `supported_highlight_languages` | Supported highlight identifiers |
+| `library_version` | Crate version |
+
+Entity and syntax spans use UTF-16 offsets. Highlighting is lexical rather than semantic; oversized inputs fall back to unformatted text. Host tests and a standalone native build can be run with:
+
+```bash
+cargo test --manifest-path native/markup-rs/Cargo.toml
+./gradlew :native:markup:buildNativeMarkup
 ```
 
-On Windows, replace `./gradlew` with `./gradlew.bat`. Use `-PskipNativeBuild=true` only for Kotlin-only work when compatible native libraries and generated bindings already exist. It skips both native compilation and binding regeneration; SDK/NDK configuration is still required.
-
-## Tech stack
-
-- **Languages and protocol:** Kotlin, Rust, MTProto, UniFFI
-- **UI and state:** Jetpack Compose, Material 3, Decompose, MVIKotlin
-- **Shared services:** Koin, Coroutines, Flow, Room
-- **Media and push:** Media3, Coil, libvpx, tlottie, Firebase Cloud Messaging, UnifiedPush
-
-## Project structure
-
-| Path | Responsibility |
-|:---|:---|
-| `app` | Application entry point, dependency injection, navigation, and push integration |
-| `core/*` | Shared models, database, UI, utilities, and markup access |
-| `feature/*` | Authentication, chat list, conversations, folders, profiles, and settings |
-| `network/bridge` | Kotlin client API, domain mapping, and error handling |
-| `network/http` | HTTP media downloads, cache, and queue |
-| `native/mtproto-rs` | Rust protocol client and UniFFI exports |
-| `native/markup-rs` | Rust Markdown, syntax highlighting, and math parsing |
-| `native/mtproto`, `native/markup` | Kotlin facades, generated bindings, and native libraries |
-| `native/vpx` | Prebuilt VP9 decoder for video stickers |
-| `vendor` | Third-party source and submodules |
-
-Features call `network/bridge`; native protocol logic lives in Rust. Features must not import generated UniFFI types or depend on other feature modules. See [AGENTS.md](AGENTS.md) for development conventions and protocol invariants.
+</details>
 
 ## Contributing
 
-Create your branch from `develop` and target `develop` with your pull request. Follow existing architecture and coding style, keep changes focused, and include a clear description and relevant verification. Respect the [Telegram API Terms of Service](https://core.telegram.org/api/terms).
+Contributions are welcome. Branch from `develop` and open pull requests against `develop`. Keep changes focused, follow the existing module boundaries, and include relevant tests or verification. Please respect the [Telegram API Terms of Service](https://core.telegram.org/api/terms).
 
-Run checks appropriate to the changed module. Examples:
+## Credits & license
 
-```sh
-./gradlew :network:bridge:test
-cargo test --manifest-path native/mtproto-rs/Cargo.toml
-cargo test --manifest-path native/markup-rs/Cargo.toml
-git diff --check
-```
+Tinygram builds on the open-source [Monogram](https://github.com/monogram-android/monogram) project and its [mono-rs](https://github.com/monogram-android/mono-rs) MTProto stack. Credit also belongs to the maintainers of the libraries used throughout the project.
 
-Use `./gradlew.bat` on Windows. Run only the checks relevant to your change; live Telegram and device behavior require separate validation with your own credentials.
-
-Report bugs with `[Bug]` and feature requests with `[Feature]` in the issue title. See the [Bug Tracker](https://github.com/orgs/monogram-android/projects/3/views/1) and [Feature Board](https://github.com/orgs/monogram-android/projects/5/views/1).
-
-## Translations
-
-UI strings live in `core/ui/src/main/res/values/strings.xml` and the `feature/*/src/main/res/values/strings.xml` files. Add or update `values-<locale>/strings.xml` in each relevant module (for example, `values-de/strings.xml`). Preserve resource names, formatting placeholders, and plural forms. Submit translations in a pull request. Keep translated READMEs aligned with the English version.
-
-## License
-
-Monogram is licensed under the [GNU General Public License v3.0](LICENSE). Third-party components and native crates retain the licenses declared in their respective source directories.
+Licensed under the [GNU General Public License v3.0](./LICENSE). Third-party dependencies retain their respective licenses.

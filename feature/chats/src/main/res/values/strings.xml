@@ -37,7 +37,7 @@
     <string name="chats_search_retry">Retry</string>
     <string name="chats_muted">Muted</string>
     <string name="chats_pinned">Pinned</string>
-    <string name="chats_brand">Monogram</string>
+    <string name="chats_brand">Tinygram</string>
     <string name="chats_waiting_network">Waiting for network</string>
     <string name="chats_yesterday">Yesterday</string>
     <string name="chats_online">Online</string>
@@ -67,4 +67,11 @@
     <string name="chats_unread_mentions">Unread mentions</string>
     <string name="chats_unread_reactions">Unread reactions</string>
     <string name="chats_proxy_status">Proxy connection status</string>
+    <string name="chats_preview_giveaway">Giveaway</string>
+    <string name="chats_preview_giveaway_results">Giveaway results</string>
+    <string name="chats_preview_paid_media">Paid media</string>
+    <string name="chats_preview_game">Game</string>
+    <string name="chats_preview_invoice">Invoice</string>
+    <string name="chats_preview_story">Story</string>
+    <string name="chats_preview_live_stream">Live stream</string>
 </resources>

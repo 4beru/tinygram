@@ -3,12 +3,15 @@ package org.monogram.feature.auth.ui
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
+import org.monogram.core.ui.auth.PasskeyCredentials
 import org.monogram.feature.auth.AuthComponent
 import org.monogram.feature.auth.AuthStore
 
@@ -38,11 +41,34 @@ fun AuthContent(
     modifier: Modifier = Modifier,
     onOpenProxy: (() -> Unit)? = null,
 ) {
-    val state by component.state.collectAsState()
+    val state by component.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    LaunchedEffect(state.passkeyOptions) {
+        val options = state.passkeyOptions ?: return@LaunchedEffect
+        try {
+            val credential = PasskeyCredentials.request(context, options.options, false)
+            component.onIntent(AuthStore.Intent.PasskeyResult(credential))
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            component.onIntent(AuthStore.Intent.PasskeyResult(null))
+            throw e
+        } catch (_: androidx.credentials.exceptions.GetCredentialCancellationException) {
+            component.onIntent(AuthStore.Intent.PasskeyResult(null))
+        } catch (_: androidx.credentials.exceptions.NoCredentialException) {
+            component.onIntent(AuthStore.Intent.PasskeyResult(null, missing = true))
+        } catch (_: PasskeyCredentials.ClientDataMismatchException) {
+            component.onIntent(AuthStore.Intent.PasskeyResult(null, clientDataMismatch = true))
+        } catch (_: Exception) {
+            component.onIntent(AuthStore.Intent.PasskeyResult(null, failed = true))
+        }
+    }
+    LifecycleStartEffect(component) {
+        component.onIntent(AuthStore.Intent.ResumeQrLogin)
+        onStopOrDispose { component.onIntent(AuthStore.Intent.PauseQrLogin) }
+    }
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     LaunchedEffect(state.phase) {
-        if (state.phase is AuthStore.Phase.Authorized) {
+        if (state.phase is AuthStore.Phase.Authorized || state.phase is AuthStore.Phase.QrEntry) {
             focusManager.clearFocus(force = true)
             keyboard?.hide()
         }

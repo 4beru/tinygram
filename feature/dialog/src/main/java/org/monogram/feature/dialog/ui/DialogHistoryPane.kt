@@ -5,6 +5,7 @@ import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -44,7 +45,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -80,8 +80,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.monogram.core.database.entity.OutgoingSendPhase
 import org.monogram.core.models.Message
 import org.monogram.core.models.PeerId
 import org.monogram.core.ui.AppearanceSettings
@@ -89,6 +91,7 @@ import org.monogram.core.ui.components.ChatWallpaper
 import org.monogram.core.ui.components.MediaScrollGate
 import org.monogram.core.ui.components.MessageListSkeleton
 import org.monogram.core.ui.components.UnreadBadge
+import org.monogram.core.ui.components.toUiMessage
 import org.monogram.core.ui.loading.MonogramLoading
 import org.monogram.core.ui.loading.MonogramLoadingListSize
 import org.monogram.core.ui.menu.AppMenuPlacementState
@@ -107,7 +110,6 @@ import org.monogram.feature.dialog.shouldPageNewer
 import org.monogram.feature.dialog.shouldPageOlder
 import org.monogram.feature.dialog.unreadDividerIndex
 import org.monogram.feature.dialog.visibleAlbumMessageIds
-import org.monogram.feature.dialog.visibleUnreadBadgeCount
 import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -129,10 +131,27 @@ internal fun ColumnScope.DialogHistoryPane(
     clipboard: androidx.compose.ui.platform.Clipboard,
     attachScope: kotlinx.coroutines.CoroutineScope,
 ) {
+    val state = if (state.searchQuery.isBlank()) state.copy(
+        messages = outgoingHistoryMessages(
+            state.messages,
+            state.outgoingTextSends,
+            state.outgoingMediaSends
+        ),
+    ) else state
     val listState = rememberLazyListState(
         cacheWindow = LazyLayoutCacheWindow(ahead = 1000.dp, behind = 1000.dp),
     )
-    var lastScrolledAnchor by rememberSaveable(state.chatId.value) { mutableStateOf<Int?>(null) }
+    var lastScrolledAnchorRequest by rememberSaveable(state.chatId.value) {
+        mutableStateOf<String?>(
+            null
+        )
+    }
+    val messageHeads = remember(state.messages) {
+        state.messages.mapIndexedNotNull { index, message ->
+            if (isAlbumHead(state.messages, index)) index to message else null
+        }
+    }
+    val rowMessageIndices = remember(messageHeads) { messageHeads.map { it.first } }
     var followBottom by rememberSaveable(state.chatId.value) { mutableStateOf(false) }
     var previousFromCache by rememberSaveable(state.chatId.value) { mutableStateOf(false) }
     var previousCount by rememberSaveable(state.chatId.value) { mutableIntStateOf(0) }
@@ -157,8 +176,9 @@ internal fun ColumnScope.DialogHistoryPane(
             menuMessageId = null
         }
     }
-    val menuMessage = state.messages.firstOrNull { it.id.id == menuMessageId }
-    val selectingMessage = state.messages.firstOrNull { it.id.id == selectingMessageId }
+    val menuMessage = menuMessageId?.let { id -> state.messages.firstOrNull { it.id.id == id } }
+    val selectingMessage =
+        selectingMessageId?.let { id -> state.messages.firstOrNull { it.id.id == id } }
     val multiSelecting = selectedIds.isNotEmpty()
     androidx.activity.compose.BackHandler(enabled = menuExpanded && selectingMessageId == null) {
         val effect = backOutMessageSelection(selectedIds, selectingMessageId, menuOpen = true)
@@ -185,9 +205,10 @@ internal fun ColumnScope.DialogHistoryPane(
             menuExpanded = false
         }
     }
-    val appearance by AppearanceSettings.state.collectAsState()
-    val pinned = state.pinnedMessages.getOrNull(state.pinnedIndex)
-        ?: state.pinnedMessages.firstOrNull()
+
+    val appearance by AppearanceSettings.state.collectAsStateWithLifecycle()
+    val pinned =
+        state.pinnedMessages.getOrNull(state.pinnedIndex) ?: state.pinnedMessages.firstOrNull()
     val showPinned = !state.isCommentThread && pinned != null
     // A bar we already had on the first frame must not slide in again on the next open.
     val pinWasReady = remember { showPinned }
@@ -255,8 +276,7 @@ internal fun ColumnScope.DialogHistoryPane(
                         val olderPageGrew = grew && !newestArrived
                         previousCount = state.messages.size
                         previousNewestId = newestId
-                        if (
-                            shouldFollowIncomingNewest(
+                        if (shouldFollowIncomingNewest(
                                 followBottom = followBottom,
                                 scrolling = listState.isScrollInProgress,
                                 newestArrived = newestArrived,
@@ -269,11 +289,6 @@ internal fun ColumnScope.DialogHistoryPane(
                         previousFromCache = state.fromCache
                     }
                     val zone = remember { ZoneId.systemDefault() }
-                    val messageHeads = remember(state.messages) {
-                        state.messages.mapIndexedNotNull { index, message ->
-                            if (isAlbumHead(state.messages, index)) index to message else null
-                        }
-                    }
                     val messageById = remember(state.messages) {
                         state.messages.associateBy { it.id.id }
                     }
@@ -292,14 +307,18 @@ internal fun ColumnScope.DialogHistoryPane(
                     }
                     val unreadRow =
                         unreadAt?.let { messageRowIndex(state.messages, state.messages[it].id.id) }
-                    LaunchedEffect(state.anchorMessageId, state.messages.size, state.anchorAtTop) {
+                    LaunchedEffect(
+                        state.anchorRequestId,
+                        state.anchorMessageId,
+                        state.messages.size,
+                        state.anchorAtTop
+                    ) {
                         val anchor = state.anchorMessageId ?: return@LaunchedEffect
-                        if (anchor == lastScrolledAnchor) return@LaunchedEffect
+                        if (state.anchorRequestId == lastScrolledAnchorRequest) return@LaunchedEffect
                         val alreadyVisible =
-                            !state.anchorAtTop && listState.firstVisibleItemIndex == 0 &&
-                                    state.messages.firstOrNull()?.id?.id == anchor
+                            !state.anchorAtTop && listState.firstVisibleItemIndex == 0 && state.messages.firstOrNull()?.id?.id == anchor
                         if (alreadyVisible) {
-                            lastScrolledAnchor = anchor
+                            lastScrolledAnchorRequest = state.anchorRequestId
                             return@LaunchedEffect
                         }
                         val index = messageRowIndex(state.messages, anchor)
@@ -315,19 +334,21 @@ internal fun ColumnScope.DialogHistoryPane(
                                     val row =
                                         layout.visibleItemsInfo.firstOrNull { it.index == index }
                                             ?: return@repeat
-                                    val height = layout.viewportSize.height -
-                                            layout.beforeContentPadding - layout.afterContentPadding
+                                    val height =
+                                        layout.viewportSize.height - layout.beforeContentPadding - layout.afterContentPadding
                                     listState.scrollToItem(index, row.size - height)
                                 }
                             }
-                            lastScrolledAnchor = anchor
+                            lastScrolledAnchorRequest = state.anchorRequestId
                         }
                     }
                     LaunchedEffect(
                         listState,
                         state.messages.size,
                         state.hasOlder,
-                        state.loadingOlder
+                        state.loadingOlder,
+                        state.searchQuery,
+                        messageHeads.size,
                     ) {
                         snapshotFlow {
                             val visible = listState.layoutInfo.visibleItemsInfo
@@ -337,9 +358,7 @@ internal fun ColumnScope.DialogHistoryPane(
                                 visible.maxOfOrNull { it.index },
                             )
                         }.collect { (first, _, last) ->
-                            if (last != null &&
-                                historyPagingAllowed(state.searchQuery) &&
-                                shouldPageOlder(
+                            if (last != null && historyPagingAllowed(state.searchQuery) && shouldPageOlder(
                                     lastVisibleIndex = last,
                                     size = messageHeads.size,
                                     hasOlder = state.hasOlder,
@@ -355,14 +374,17 @@ internal fun ColumnScope.DialogHistoryPane(
                         listState,
                         state.messages.size,
                         state.hasNewer,
-                        state.loadingNewer
+                        state.loadingNewer,
+                        state.searchQuery,
                     ) {
                         snapshotFlow {
                             listState.firstVisibleItemIndex
                         }.collect { first ->
-                            if (
-                                historyPagingAllowed(state.searchQuery) &&
-                                shouldPageNewer(first, state.hasNewer, state.loadingNewer)
+                            if (historyPagingAllowed(state.searchQuery) && shouldPageNewer(
+                                    first,
+                                    state.hasNewer,
+                                    state.loadingNewer
+                                )
                             ) {
                                 component.onLoadNewer()
                             }
@@ -373,9 +395,9 @@ internal fun ColumnScope.DialogHistoryPane(
                             val scrolling = listState.isScrollInProgress
                             val index =
                                 listState.layoutInfo.visibleItemsInfo.minByOrNull { it.index }?.index
-                            // reverseLayout: index 0 / no forward scroll means the newest row is on screen.
-                            val atLiveEdge =
-                                listState.firstVisibleItemIndex == 0 || !listState.canScrollForward
+                            val atLiveEdge = org.monogram.feature.dialog.isHistoryLiveEdge(
+                                listState.firstVisibleItemIndex, listState.canScrollBackward,
+                            )
                             Triple(
                                 scrolling,
                                 index?.let { messageHeads.getOrNull(it)?.second?.id?.id },
@@ -389,12 +411,13 @@ internal fun ColumnScope.DialogHistoryPane(
                     }
                     LaunchedEffect(listState, state.chatId, messageHeads) {
                         snapshotFlow {
-                            visibleAlbumMessageIds(
-                                state.messages,
-                                listState.layoutInfo.visibleItemsInfo.mapTo(HashSet()) { it.index },
+                            listState.layoutInfo.visibleItemsInfo.mapTo(HashSet()) { it.index }
+                        }.collect { rows ->
+                            component.onVisibleWindow(
+                                visibleAlbumMessageIds(
+                                    state.messages, rows, rowMessageIndices
+                                )
                             )
-                        }.collect { ids ->
-                            component.onVisibleWindow(ids)
                         }
                     }
                     val scrollGate = remember { Any() }
@@ -420,7 +443,12 @@ internal fun ColumnScope.DialogHistoryPane(
                     ) {
                         items(
                             items = messageHeads,
-                            key = { (_, msg) -> "${msg.id.chatId.value}:${msg.id.id}" },
+                            key = { (_, msg) ->
+                                val identity =
+                                    msg.randomId?.takeIf { it != 0L }?.let { "random:$it" }
+                                        ?: "message:${msg.id.id}"
+                                "${msg.id.chatId.value}:$identity"
+                            },
                             contentType = { (_, msg) -> msg.mediaKind ?: "text" },
                         ) { (index, message) ->
                             val album = albumSlice(state.messages, index)
@@ -428,8 +456,11 @@ internal fun ColumnScope.DialogHistoryPane(
                             val newerMessage = state.messages.getOrNull(index - 1)
                             val joinsOlder = message.belongsToSameBlockAs(olderMessage, zone)
                             val joinsNewer = message.belongsToSameBlockAs(newerMessage, zone)
-                            val newDay = olderMessage == null ||
-                                    !DialogTime.sameLocalDay(message.date, olderMessage.date, zone)
+                            val newDay = olderMessage == null || !DialogTime.sameLocalDay(
+                                message.date,
+                                olderMessage.date,
+                                zone
+                            )
                             if (unreadAt != null && index == unreadAt) {
                                 Text(
                                     text = stringResource(R.string.dialog_unread),
@@ -441,12 +472,17 @@ internal fun ColumnScope.DialogHistoryPane(
                                     color = MaterialTheme.colorScheme.primary,
                                 )
                             }
-                            Column {
+                            Column(
+                                Modifier.animateItem(
+                                    fadeInSpec = tween(180),
+                                    placementSpec = spring(dampingRatio = 1f, stiffness = 400f),
+                                    fadeOutSpec = tween(120),
+                                )
+                            ) {
                                 if (newDay) {
                                     Box(Modifier.padding(horizontal = 10.dp)) {
                                         DialogDateSeparator(
-                                            epochSeconds = message.date,
-                                            zone = zone
+                                            epochSeconds = message.date, zone = zone
                                         )
                                     }
                                 }
@@ -463,29 +499,18 @@ internal fun ColumnScope.DialogHistoryPane(
                                     }
                                     .joinedSelectionHighlight(
                                         selected = selectedForForwarding,
-                                        extendAbove = olderMessage != null &&
-                                                olderMessage.id.id in selectedIds &&
-                                                !newDay,
-                                        extendBelow = newer != null &&
-                                                newer.id.id in selectedIds &&
-                                                DialogTime.sameLocalDay(
-                                                    message.date,
-                                                    newer.date,
-                                                    zone
-                                                ),
+                                        extendAbove = olderMessage != null && olderMessage.id.id in selectedIds && !newDay,
+                                        extendBelow = newer != null && newer.id.id in selectedIds && DialogTime.sameLocalDay(
+                                            message.date, newer.date, zone
+                                        ),
                                         color = selectionColor,
                                     )
                                     .then(
-                                        if (
-                                            selectableForForwarding &&
-                                            selectingMessage?.id != message.id
-                                        ) {
+                                        if (selectableForForwarding && selectingMessage?.id != message.id) {
                                             hold.onToggle = { local ->
                                                 val window = hold.coordinates?.localToWindow(local)
                                                 applyHistoryGesture(
-                                                    album,
-                                                    HistoryMessageGesture.Tap,
-                                                    window
+                                                    album, HistoryMessageGesture.Tap, window
                                                 )
                                             }
                                             hold.onLongPress = {
@@ -508,42 +533,72 @@ internal fun ColumnScope.DialogHistoryPane(
                                         .then(rowModifier)
                                         .padding(horizontal = 10.dp),
                                 ) {
+                                    val outgoingSend = outgoingBubbleSend(
+                                        message,
+                                        state.outgoingTextSends,
+                                        state.outgoingMediaSends
+                                    )
+                                    val sendFailed = outgoingSend?.phase in setOf(
+                                        OutgoingSendPhase.FAILED,
+                                        OutgoingSendPhase.UNCERTAIN
+                                    )
+                                    val bubbleMessage = if (outgoingSend != null) message.copy(
+                                        pending = !sendFailed,
+                                        failed = sendFailed,
+                                    ) else message
                                     val quoted = message.replyToMsgId?.let(messageById::get)
                                     val caption = album.firstOrNull { !it.text.isNullOrBlank() }
                                     SwipeToReply(
-                                        enabled = menuMessage == null && selectingMessage == null && !multiSelecting &&
-                                                message.mediaKind != "service" && !message.pending && message.id.id > 0 &&
-                                                (state.canSendPlain || state.canSendPhotos),
+                                        enabled = menuMessage == null && selectingMessage == null && !multiSelecting && message.mediaKind != "service" && !message.pending && message.id.id > 0 && (state.canSendPlain || state.canSendPhotos),
                                         onReply = {
                                             component.onReply(
-                                                message,
-                                                focusComposer = true
+                                                message, focusComposer = true
                                             )
                                         },
                                     ) {
                                         MessageBubble(
+                                            onRetrySend = outgoingSend?.takeIf { sendFailed }
+                                                ?.let { send ->
+                                                    {
+                                                        if (send.media) component.onRetryMediaSend(
+                                                            send.id
+                                                        )
+                                                        else component.onRetryTextSend(send.id)
+                                                    }
+                                                },
+                                            sendUncertain = outgoingSend?.phase == OutgoingSendPhase.UNCERTAIN,
+                                            sendError = outgoingSend?.let { send ->
+                                                (state.outgoingSendSync.errors[send.id]
+                                                    ?: state.outgoingSendSync.error)?.toUiMessage()
+                                            },
                                             onMarkupButton = { button ->
                                                 component.onBotButton(
-                                                    message.id.id,
-                                                    button,
-                                                    fromKeyboard = false
+                                                    message.id.id, button, fromKeyboard = false
                                                 )
                                             },
-                                            onToggleChecklist = { itemId ->
+                                            checklistBusy = message.id.id in state.checklistMutations,
+                                            onRemoveChecklistItem = if (state.canCreateChecklist) { itemId ->
+                                                component.onRemoveChecklistItem(message, itemId)
+                                            } else null,
+                                            onEditChecklistItem = if (state.canCreateChecklist) { itemId ->
+                                                component.onEditChecklistItem(message, itemId)
+                                            } else null,
+                                            onToggleChecklist = if (state.canView) { itemId ->
                                                 component.onToggleChecklist(message.id.id, itemId)
-                                            },
-                                            onPollVote = component::onVotePoll,
-                                            onAddChecklistItem = { messageId, nextId ->
+                                            } else null,
+                                            onClosePoll = component::onClosePoll.takeIf { state.canView },
+                                            pollVoting = message.id.id in state.pollVotesInFlight,
+                                            onPollVote = component::onVotePoll.takeIf { state.canView },
+                                            onAddChecklistItem = if (state.canView) { messageId, nextId ->
                                                 taskDraftFor = messageId to nextId
-                                            },
+                                            } else null,
                                             selectable = selectedForForwarding,
                                             message = if (album.size > 1 && caption != null) {
-                                                message.copy(
-                                                    text = caption.text,
-                                                    entities = caption.entities
+                                                bubbleMessage.copy(
+                                                    text = caption.text, entities = caption.entities
                                                 )
                                             } else {
-                                                message
+                                                bubbleMessage
                                             },
                                             album = album,
                                             sender = state.senders[message.senderId],
@@ -594,8 +649,7 @@ internal fun ColumnScope.DialogHistoryPane(
                                             },
                                             quoted = quoted,
                                             quotedSender = quoted?.senderId?.let { state.senders[it]?.title },
-                                            hideTopicRootReply = state.inForumTopic &&
-                                                    message.replyToMsgId == state.threadTopId,
+                                            hideTopicRootReply = state.inForumTopic && message.replyToMsgId == state.threadTopId,
                                             onReact = { emoji, doc ->
                                                 component.onReact(message.id.id, emoji, doc)
                                             },
@@ -631,9 +685,7 @@ internal fun ColumnScope.DialogHistoryPane(
                                             modifier = Modifier.padding(top = if (joinsOlder) 0.dp else 6.dp),
                                         )
                                     }
-                                    if (menuMessage?.id == message.id &&
-                                        (!menuVisibility.isIdle || menuVisibility.currentState || menuVisibility.targetState)
-                                    ) {
+                                    if (menuMessage?.id == message.id && (!menuVisibility.isIdle || menuVisibility.currentState || menuVisibility.targetState)) {
                                         val menuPlacement = remember { AppMenuPlacementState() }
                                         AppMenuScrimPopup(
                                             visible = menuExpanded,
@@ -665,8 +717,7 @@ internal fun ColumnScope.DialogHistoryPane(
                                                             viewers = state.messageViewers[message.id.id],
                                                             mediaRepository = component.mediaRepository,
                                                             viewerAvatar = { viewer ->
-                                                                viewer.avatarCacheKey
-                                                                    ?.let {
+                                                                viewer.avatarCacheKey?.let {
                                                                         component.mediaRepository?.cachedFile(
                                                                             it
                                                                         )
@@ -696,8 +747,7 @@ internal fun ColumnScope.DialogHistoryPane(
                                                             clipboard.setClipEntry(
                                                                 ClipEntry(
                                                                     android.content.ClipData.newPlainText(
-                                                                        "text",
-                                                                        it
+                                                                        "text", it
                                                                     )
                                                                 )
                                                             )
@@ -747,7 +797,6 @@ internal fun ColumnScope.DialogHistoryPane(
                             Box {
                                 SmallFloatingActionButton(
                                     onClick = {
-                                        lastScrolledAnchor = null
                                         component.onJumpUnreadReaction()
                                     },
                                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -780,7 +829,6 @@ internal fun ColumnScope.DialogHistoryPane(
                                 val mentionJump = stringResource(R.string.dialog_jump_mention)
                                 SmallFloatingActionButton(
                                     onClick = {
-                                        lastScrolledAnchor = null
                                         component.onJumpMention()
                                     },
                                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -818,8 +866,6 @@ internal fun ColumnScope.DialogHistoryPane(
                                 SmallFloatingActionButton(
                                     onClick = {
                                         if (unreadRow != null && firstVisible > unreadRow) {
-                                            // Re-arm the anchor: the same unread message may be tapped twice.
-                                            lastScrolledAnchor = null
                                             component.onJumpUnread()
                                         } else {
                                             followBottom = true
@@ -842,12 +888,7 @@ internal fun ColumnScope.DialogHistoryPane(
                                     )
                                 }
                                 UnreadBadge(
-                                    count = visibleUnreadBadgeCount(
-                                        state.messages,
-                                        state.unreadCount,
-                                        state.readInboxMaxId,
-                                        state.hasNewer,
-                                    ),
+                                    count = if (unreadAt != null) state.unreadCount else 0,
                                     muted = false,
                                     compact = true,
                                     modifier = Modifier
@@ -860,8 +901,8 @@ internal fun ColumnScope.DialogHistoryPane(
                 }
             }
             val hasInlineHits = state.inlineResults?.results?.isNotEmpty() == true
-            val showInline = state.inlineQuery != null &&
-                    (state.inlineLoading || hasInlineHits || (state.inlineResults != null && !state.inlineError))
+            val showInline =
+                state.inlineQuery != null && (state.inlineLoading || hasInlineHits || (state.inlineResults != null && !state.inlineError))
             if (showInline) {
                 InlineBotResultsOverlay(
                     query = state.inlineQuery!!,
@@ -875,11 +916,8 @@ internal fun ColumnScope.DialogHistoryPane(
                     modifier = Modifier.align(Alignment.BottomCenter),
                 )
             } else {
-                val showMentions = state.mentionToken != null &&
-                        (state.mentionLoading ||
-                                state.mentionCandidates.isNotEmpty() ||
-                                state.isGroup ||
-                                state.isChannel)
+                val showMentions =
+                    state.mentionToken != null && (state.mentionLoading || state.mentionCandidates.isNotEmpty() || state.isGroup || state.isChannel)
                 MentionOverlayHost(
                     visible = showMentions,
                     handle = state.mentionToken.orEmpty(),
@@ -900,10 +938,7 @@ internal fun ColumnScope.DialogHistoryPane(
                     val scrolling = listState.isScrollInProgress
                     val topIndex =
                         listState.layoutInfo.visibleItemsInfo.maxByOrNull { it.index }?.index
-                    val heads = state.messages.mapIndexedNotNull { index, message ->
-                        if (isAlbumHead(state.messages, index)) message else null
-                    }
-                    val date = topIndex?.let { heads.getOrNull(it)?.date }
+                    val date = topIndex?.let { messageHeads.getOrNull(it)?.second?.date }
                     scrolling to date
                 }.collect { (scrolling, date) ->
                     if (date != null) dateOverlayEpoch = date
@@ -956,49 +991,49 @@ private class RowHold {
 
 private fun Modifier.messageSelectionTouch(hold: RowHold): Modifier =
     semantics(mergeDescendants = true) {
-    role = Role.Checkbox
+        role = Role.Checkbox
         toggleableState = if (hold.selected) ToggleableState.On else ToggleableState.Off
-    onClick {
-        hold.onToggle(Offset.Zero)
-        true
-    }
-    }.pointerInput(hold) {
-    awaitEachGesture {
-        val down = awaitFirstDown(requireUnconsumed = false)
-        val slop = viewConfiguration.touchSlop
-        var claimed = false
-        val completed = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis + 48) {
-            var current = down
-            while (current.pressed) {
-                val event = awaitPointerEvent()
-                val change =
-                    event.changes.firstOrNull { it.id == down.id } ?: return@withTimeoutOrNull false
-                if (change.isConsumed) {
-                    claimed = true
-                    return@withTimeoutOrNull false
-                }
-                val delta = change.position - down.position
-                if (delta.x * delta.x + delta.y * delta.y > slop * slop) {
-                    return@withTimeoutOrNull false
-                }
-                current = change
-            }
-            if (!current.isConsumed) {
-                current.consume()
-                hold.onToggle(current.position)
-            }
+        onClick {
+            hold.onToggle(Offset.Zero)
             true
         }
-        if (completed == null && !claimed && !down.isConsumed) {
-            hold.onLongPress()
-            while (true) {
-                val event = awaitPointerEvent()
-                val change = event.changes.firstOrNull { it.id == down.id }
-                if (change == null || !change.pressed) break
-                change.consume()
+    }.pointerInput(hold) {
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false)
+            val slop = viewConfiguration.touchSlop
+            var claimed = false
+            val completed = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis + 48) {
+                var current = down
+                while (current.pressed) {
+                    val event = awaitPointerEvent()
+                    val change = event.changes.firstOrNull { it.id == down.id }
+                        ?: return@withTimeoutOrNull false
+                    if (change.isConsumed) {
+                        claimed = true
+                        return@withTimeoutOrNull false
+                    }
+                    val delta = change.position - down.position
+                    if (delta.x * delta.x + delta.y * delta.y > slop * slop) {
+                        return@withTimeoutOrNull false
+                    }
+                    current = change
+                }
+                if (!current.isConsumed) {
+                    current.consume()
+                    hold.onToggle(current.position)
+                }
+                true
+            }
+            if (completed == null && !claimed && !down.isConsumed) {
+                hold.onLongPress()
+                while (true) {
+                    val event = awaitPointerEvent()
+                    val change = event.changes.firstOrNull { it.id == down.id }
+                    if (change == null || !change.pressed) break
+                    change.consume()
+                }
             }
         }
-    }
     }
 
 private val SelectionGap = 2.dp

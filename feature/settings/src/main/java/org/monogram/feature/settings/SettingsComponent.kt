@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.monogram.core.common.MediaCacheLimit
 import org.monogram.core.common.MediaCacheLimitStore
+import org.monogram.core.common.Outcome
 import org.monogram.core.common.push.NotificationLocalStore
 import org.monogram.core.common.push.PushRegistration
 import org.monogram.core.database.OfflineWarmup
@@ -37,7 +38,7 @@ import org.monogram.network.http.MediaRepository
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsComponent(
     componentContext: ComponentContext,
-    storeFactory: StoreFactory,
+    private val storeFactory: StoreFactory,
     private val client: MtprotoClient,
     sessionStore: SessionMetadataStore?,
     warmup: OfflineWarmup?,
@@ -55,6 +56,7 @@ class SettingsComponent(
     openNotifications: Boolean = false,
     val appUpdate: AppUpdateController? = null,
     val updatesEnabled: Boolean = true,
+    onBeforeLogout: suspend () -> Unit = {},
 ) : ComponentContext by componentContext, ProxySession {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -68,10 +70,35 @@ class SettingsComponent(
             appVersion = appVersion,
             buildStamp = buildStamp,
             pushRegistration = pushRegistration,
+            beforeLogout = onBeforeLogout,
         ).create()
     }
 
     val state: StateFlow<SettingsStore.State> = store.stateFlow
+    val passkeysEnabled = MutableStateFlow(false)
+    fun refreshPasskeysEnabled() {
+        scope.launch {
+            val result = client.passkeysEnabled()
+            passkeysEnabled.value = (result as? Outcome.Ok)?.value == true
+        }
+    }
+
+    private val passkeysStore by lazy {
+        instanceKeeper.getStore("passkeys") { PasskeysStoreFactory(storeFactory, client).create() }
+    }
+    val passkeys: StateFlow<PasskeysStore.State> by lazy { passkeysStore.stateFlow }
+    fun onPasskeys(intent: PasskeysStore.Intent) = passkeysStore.accept(intent)
+
+    private val devicesStore by lazy {
+        instanceKeeper.getStore("devices") { DevicesStoreFactory(storeFactory, client).create() }
+    }
+    val devices: StateFlow<DevicesStore.State> by lazy { devicesStore.stateFlow }
+    fun onDevices(intent: DevicesStore.Intent) = devicesStore.accept(intent)
+    fun onDeviceScanned(link: String) {
+        if (pages.value.active.configuration != SettingsPage.DeviceScanner) return
+        pageNavigation.pop()
+        onDevices(DevicesStore.Intent.Accept(link))
+    }
     val updateState: StateFlow<AppUpdateState> =
         appUpdate?.state ?: MutableStateFlow(AppUpdateState.Idle)
     private val notificationsStore = instanceKeeper.getStore("notifications") {

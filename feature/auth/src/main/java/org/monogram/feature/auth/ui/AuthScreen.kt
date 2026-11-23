@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -55,6 +56,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -73,6 +76,7 @@ import org.monogram.feature.auth.normalizePhone
 
 internal fun authStepOf(phase: AuthStore.Phase): Int? = when (phase) {
     AuthStore.Phase.PhoneEntry -> 0
+    is AuthStore.Phase.QrEntry -> 0
     is AuthStore.Phase.CodeEntry -> 1
     AuthStore.Phase.PasswordEntry -> 2
     is AuthStore.Phase.Authorized -> null
@@ -86,9 +90,15 @@ fun AuthScreen(
     onOpenProxy: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
+    if (state.phase is AuthStore.Phase.QrEntry) {
+        AuthQrScreen(state, onIntent, modifier)
+        return
+    }
     val step = authStepOf(state.phase)
     if (step == null) {
-        Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface))
+        Box(modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface))
         return
     }
     val motion = authMotionEnabled()
@@ -101,7 +111,8 @@ fun AuthScreen(
     var pasteEmpty by rememberSaveable(state.phase) { mutableStateOf(false) }
     var submittedCode by rememberSaveable { mutableStateOf("") }
     var showCodeHelp by rememberSaveable { mutableStateOf(false) }
-    val expectedCodeLength = (state.phase as? AuthStore.Phase.CodeEntry)?.codeLength ?: AuthCodeLength
+    val expectedCodeLength =
+        (state.phase as? AuthStore.Phase.CodeEntry)?.codeLength ?: AuthCodeLength
     LaunchedEffect(state.phase) {
         if (state.phase !is AuthStore.Phase.CodeEntry) {
             submittedCode = ""
@@ -126,7 +137,7 @@ fun AuthScreen(
     }
 
     val canGoBack = state.phase is AuthStore.Phase.CodeEntry ||
-        state.phase is AuthStore.Phase.PasswordEntry
+            state.phase is AuthStore.Phase.PasswordEntry
     val fieldError = state.error != null && !state.loading
     val errorMessage = state.error?.let { errorText(it) }
     val pasteMessage = if (pasteEmpty) stringResource(R.string.auth_paste_empty) else null
@@ -143,13 +154,56 @@ fun AuthScreen(
         },
     )
 
+    val primaryAction: @Composable () -> Unit = {
+        MonogramBusyButton(
+            onClick = {
+                when (state.phase) {
+                    is AuthStore.Phase.CodeEntry ->
+                        onIntent(AuthStore.Intent.SignIn)
+
+                    AuthStore.Phase.PasswordEntry ->
+                        onIntent(AuthStore.Intent.SubmitPassword(localPassword))
+
+                    else -> onIntent(AuthStore.Intent.SendCode)
+                }
+            },
+            busy = state.loadingUi.visible,
+            enabled = primaryEnabled,
+            modifier = Modifier
+                .widthIn(max = AuthFormMaxWidth)
+                .fillMaxWidth()
+                .height(56.dp)
+                .testTag(AuthTestTags.PRIMARY),
+            shapes = ExpressiveDefaults.largeButtonShapes(),
+        ) {
+            Text(actionLabel)
+        }
+    }
+
     Scaffold(
-        modifier = modifier.fillMaxSize().testTag(AuthTestTags.ROOT),
-        containerColor = MaterialTheme.colorScheme.surface,
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.surface,
+                        MaterialTheme.colorScheme.surfaceContainerLow,
+                    ),
+                ),
+            )
+            .testTag(AuthTestTags.ROOT),
+        containerColor = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onSurface,
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
-                title = {},
+                title = {
+                    Text(
+                        stringResource(R.string.auth_brand),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                },
                 navigationIcon = {
                     if (canGoBack) {
                         val back = stringResource(R.string.auth_cd_back)
@@ -163,7 +217,8 @@ fun AuthScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent,
                 ),
                 actions = {
                     if (onOpenProxy != null) {
@@ -181,7 +236,7 @@ fun AuthScreen(
             )
         },
         bottomBar = {
-            Surface(color = MaterialTheme.colorScheme.surface) {
+            if (step != 0) Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -189,27 +244,7 @@ fun AuthScreen(
                         .padding(horizontal = 24.dp, vertical = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    MonogramBusyButton(
-                        onClick = {
-                            when (state.phase) {
-                                is AuthStore.Phase.CodeEntry ->
-                                    onIntent(AuthStore.Intent.SignIn)
-                                AuthStore.Phase.PasswordEntry ->
-                                    onIntent(AuthStore.Intent.SubmitPassword(localPassword))
-                                else -> onIntent(AuthStore.Intent.SendCode)
-                            }
-                        },
-                        busy = state.loadingUi.visible,
-                        enabled = primaryEnabled,
-                        modifier = Modifier
-                            .widthIn(max = AuthFormMaxWidth)
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .testTag(AuthTestTags.PRIMARY),
-                        shapes = ExpressiveDefaults.largeButtonShapes(),
-                    ) {
-                        Text(actionLabel)
-                    }
+                    primaryAction()
                 }
             }
         },
@@ -217,7 +252,9 @@ fun AuthScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(inner),
+                .padding(inner)
+                .consumeWindowInsets(inner)
+                .imePadding(),
             contentAlignment = Alignment.Center,
         ) {
             Column(
@@ -265,6 +302,7 @@ fun AuthScreen(
                                 enabled = !state.loading,
                                 isError = fieldError,
                             )
+
                             2 -> AuthPasswordField(
                                 value = localPassword,
                                 visible = passwordVisible,
@@ -299,6 +337,7 @@ fun AuthScreen(
                                     }
                                 },
                             )
+
                             else -> AuthPhoneStep(
                                 state = state,
                                 focus = phoneFocus,
@@ -306,6 +345,7 @@ fun AuthScreen(
                                 isError = fieldError && state.error is AuthStore.Error.PhoneRequired,
                                 onIntent = onIntent,
                                 primaryEnabled = primaryEnabled,
+                                primaryAction = primaryAction,
                             )
                         }
                         AuthInlineError(message = errorMessage ?: pasteMessage)
@@ -321,7 +361,8 @@ fun AuthScreen(
                                             ?.toString()
                                             .orEmpty()
                                         pasteEmpty = text.isEmpty()
-                                        val code = text.filter(Char::isDigit).take(expectedCodeLength)
+                                        val code =
+                                            text.filter(Char::isDigit).take(expectedCodeLength)
                                         if (code.isNotEmpty()) {
                                             onIntent(AuthStore.Intent.CodeChanged(code))
                                         }
@@ -441,14 +482,14 @@ private fun authStepTransition(motion: Boolean, forward: Boolean): ContentTransf
     }
     val direction = if (forward) 1 else -1
     return (
-        slideInHorizontally(animationSpec = tween(320, easing = AuthExpressiveEasing)) {
-            it / 6 * direction
-        } + fadeIn(animationSpec = tween(220))
-        ) togetherWith (
-        slideOutHorizontally(animationSpec = tween(220, easing = AuthExpressiveEasing)) {
-            -it / 6 * direction
-        } + fadeOut(animationSpec = tween(140))
-        )
+            slideInHorizontally(animationSpec = tween(320, easing = AuthExpressiveEasing)) {
+                it / 6 * direction
+            } + fadeIn(animationSpec = tween(220))
+            ) togetherWith (
+            slideOutHorizontally(animationSpec = tween(220, easing = AuthExpressiveEasing)) {
+                -it / 6 * direction
+            } + fadeOut(animationSpec = tween(140))
+            )
 }
 
 @Composable
@@ -472,8 +513,10 @@ private fun codeSentMessage(phase: AuthStore.Phase.CodeEntry): String {
         "app" -> stringResource(R.string.auth_code_sent_telegram)
         "sms", "sms_word", "sms_phrase", "fragment", "firebase" ->
             stringResource(R.string.auth_code_sent_sms, phone)
+
         "call", "flash_call", "missed_call" ->
             stringResource(R.string.auth_code_sent_call, phone)
+
         else -> stringResource(R.string.auth_code_sent_to, phone)
     }
 }

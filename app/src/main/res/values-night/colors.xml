@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="notification_accent">#FF6ED2C8</color>
+    <color name="startup_background">#FF001419</color>
+    <color name="startup_foreground">#FF6ED2C8</color>
+</resources>

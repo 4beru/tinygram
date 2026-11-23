@@ -63,6 +63,7 @@ data class Chat(
     val canView: Boolean = true,
     val canSendPlain: Boolean = true,
     val canSendPhotos: Boolean = true,
+    val canSendPolls: Boolean = false,
     val canForward: Boolean = true,
     val canDeleteOthers: Boolean = false,
     /** Creator or `manage_topics` admin right. */
@@ -218,6 +219,7 @@ data class Message(
     val read: Boolean = false,
     val failed: Boolean = false,
     val replyQuote: String? = null,
+    val replyQuoteEntities: List<TextEntity> = emptyList(),
     val entities: List<TextEntity> = emptyList(),
     val noforwards: Boolean = false,
     val replyToMsgId: Int? = null,
@@ -232,6 +234,7 @@ data class Message(
     val senderPhotoCacheKey: String? = null,
     val replyMarkup: ReplyMarkup? = null,
     val checklist: Checklist? = null,
+    val mediaPreviewRestricted: Boolean = true,
 )
 
 /** Last dialog row, so opening a listed chat can paint before history returns. */

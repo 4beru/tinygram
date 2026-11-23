@@ -44,6 +44,7 @@ interface SettingsStore : Store<SettingsStore.Intent, SettingsStore.State, Setti
         val appVersion: String,
         val buildStamp: String,
         val nativeVersion: String,
+        val apiLayer: Int = 0,
         val cacheBytes: Long = 0L,
         val cacheByKind: Map<String, Long> = emptyMap(),
         val cacheChats: List<CacheChatRow> = emptyList(),
@@ -68,6 +69,7 @@ internal class SettingsStoreFactory(
     private val appVersion: String,
     private val buildStamp: String,
     private val pushRegistration: PushRegistration?,
+    private val beforeLogout: suspend () -> Unit = {},
     private val clearKindCache: (String) -> Long = { kind ->
         mediaRepository?.clearKindCache(kind) ?: 0L
     },
@@ -81,6 +83,7 @@ internal class SettingsStoreFactory(
                     appVersion = appVersion,
                     buildStamp = buildStamp,
                     nativeVersion = client.libraryVersion(),
+                    apiLayer = client.apiLayer(),
                     cacheBytes = mediaRepository?.cacheSizeBytes() ?: 0L,
                 ),
                 bootstrapper = SimpleBootstrapper(Unit),
@@ -98,6 +101,7 @@ internal class SettingsStoreFactory(
         data class CacheMessage(val value: String?) : Msg
         data class Error(val value: TelegramError?) : Msg
         data class NativeVersion(val value: String) : Msg
+        data class ApiLayer(val value: Int) : Msg
         data class DebugExportMessage(val value: String?) : Msg
     }
 
@@ -133,6 +137,7 @@ internal class SettingsStoreFactory(
         private fun refresh() {
             dispatch(Msg.Error(null))
             dispatch(Msg.NativeVersion(client.libraryVersion()))
+            dispatch(Msg.ApiLayer(client.apiLayer()))
             refreshCache()
             scope.launch {
                 val cachedId = sessionStore?.readAuthorizedUserId()?.value
@@ -181,6 +186,7 @@ internal class SettingsStoreFactory(
             dispatch(Msg.Loading(true))
             scope.launch {
                 try {
+                    beforeLogout()
                     pushRegistration?.unregisterPush()
                     when (val result = client.logout()) {
                         is Outcome.Err -> dispatch(Msg.Error(result.telegramError))
@@ -241,6 +247,7 @@ internal class SettingsStoreFactory(
             is Msg.CacheMessage -> copy(cacheMessage = msg.value)
             is Msg.Error -> copy(error = msg.value)
             is Msg.NativeVersion -> copy(nativeVersion = msg.value)
+            is Msg.ApiLayer -> copy(apiLayer = msg.value)
             is Msg.DebugExportMessage -> copy(debugExportMessage = msg.value)
         }
     }

@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://devenv.sh/devenv.schema.json
+inputs:
+  devenv:
+    url: github:cachix/devenv/v2.2.2?dir=src/modules
+  nixpkgs:
+    url: github:cachix/devenv-nixpkgs/rolling
+  android-nixpkgs:
+    url: github:tadfisher/android-nixpkgs
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
+  rust-overlay:
+    url: github:oxalica/rust-overlay
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
+allow_unfree: true

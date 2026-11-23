@@ -2,18 +2,49 @@ package org.monogram.network.bridge.session
 
 import org.monogram.core.common.Outcome
 import org.monogram.core.models.AuthState
+import org.monogram.core.models.DeviceSession
+import org.monogram.core.models.Passkey
+import org.monogram.core.models.PasskeyCredential
+import org.monogram.core.models.PasskeyLoginOptions
+import org.monogram.core.models.QrLogin
 import org.monogram.network.bridge.MtprotoTransportMode
 import org.monogram.network.bridge.ProxyConfig
 
 enum class ProxyConnectionStatus { Disabled, Disconnected, Connecting, Connected, Failed }
 
 interface SessionOps {
+    suspend fun passkeysEnabled(): Outcome<Boolean> = Outcome.Ok(false)
+    suspend fun initPasskeyLogin(): Outcome<PasskeyLoginOptions> = Outcome.Err("unsupported")
+    suspend fun finishPasskeyLogin(
+        options: PasskeyLoginOptions,
+        credential: PasskeyCredential
+    ): Outcome<AuthState> = Outcome.Err("unsupported")
+
+    suspend fun initPasskeyRegistration(): Outcome<String> = Outcome.Err("unsupported")
+    suspend fun registerPasskey(credential: PasskeyCredential): Outcome<Passkey> =
+        Outcome.Err("unsupported")
+
+    suspend fun getPasskeys(): Outcome<List<Passkey>> = Outcome.Err("unsupported")
+    suspend fun deletePasskey(id: String): Outcome<Boolean> = Outcome.Err("unsupported")
+
+    suspend fun exportLoginToken(): Outcome<QrLogin> = Outcome.Err("unsupported")
+    suspend fun pollLoginToken(): Outcome<Boolean> = Outcome.Err("unsupported")
+
+    suspend fun getDeviceSessions(): Outcome<List<DeviceSession>> =
+        Outcome.Err("unsupported")
+
+    suspend fun acceptLoginToken(link: String): Outcome<DeviceSession> =
+        Outcome.Err("unsupported")
+
+    suspend fun revokeDeviceSession(hash: Long): Outcome<Unit> = Outcome.Err("unsupported")
+
     fun proxyConnectionStatus(): ProxyConnectionStatus = ProxyConnectionStatus.Disabled
     fun setTransportMode(mode: MtprotoTransportMode): Outcome<Unit> = Outcome.Ok(Unit)
     fun configureProxy(config: ProxyConfig): Outcome<Unit> = Outcome.Ok(Unit)
     fun clearProxy(): Outcome<Unit> = Outcome.Ok(Unit)
     suspend fun pingProxy(config: ProxyConfig): Outcome<Long> =
         Outcome.Err("proxy ping unavailable")
+
     suspend fun isLocallyAuthorized(): Outcome<Boolean> = Outcome.Ok(false)
     suspend fun isAuthorized(): Outcome<Boolean> = Outcome.Ok(false)
 
@@ -29,6 +60,9 @@ interface SessionOps {
     suspend fun signIn(phone: String, phoneCodeHash: String, code: String): Outcome<AuthState>
     suspend fun checkPassword(password: String): Outcome<AuthState.Authorized>
     fun libraryVersion(): String
+
+    /** Telegram TL layer compiled into the native library. */
+    fun apiLayer(): Int = 0
 
     /** Applies the "Faster downloads" setting. No handle needed; takes effect next download. */
     fun applyDownloadConcurrency(lanes: Int, parts: Int) {}

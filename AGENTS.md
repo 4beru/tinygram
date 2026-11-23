@@ -23,6 +23,10 @@ The minimum Android SDK is 24.
   contract, or a high-risk boundary. Prefer focused unit tests; use
   instrumentation tests only when the behavior requires Android rendering,
   lifecycle, storage, or interaction.
+- Keep Rust unit tests in each crate's `tests/unit` directory. Reference them
+  from the owning source module with `#[cfg(test)]` and `#[path = "..."]`
+  so private-module access stays intact; do not embed test modules in production
+  source files. Put integration tests in the crate's `tests` directory.
 - Run checks proportional to the change and report exactly what was run. Do
   not claim device or live Telegram verification without performing it.
 
@@ -73,7 +77,7 @@ belong in Rust.
 - When a locale is not reasonably translatable from the available context,
   flag it explicitly instead of silently copying English. Keep locale files
   syntactically valid.
-- Keep translated README files aligned when documentation text changes.
+- Keep the single root `README.md` accurate when documentation or project behavior changes.
 
 ## Data, security, and protocol invariants
 
@@ -125,7 +129,7 @@ untracked. Initialize submodules when needed:
 git submodule update --init --recursive
 ```
 
-The MTProto crate may also require `../telers-mtproto-impl`.
+The MTProto crate uses the pinned `vendor/mono-rs` submodule through local path dependencies. Initialize submodules with `git submodule update --init --recursive`.
 
 ## References
 
@@ -144,8 +148,8 @@ The MTProto crate may also require `../telers-mtproto-impl`.
 | Files and references | https://core.telegram.org/api/files and https://core.telegram.org/api/file-references |
 | Folders and offsets | https://core.telegram.org/api/folders and https://core.telegram.org/api/offsets |
 | API id and terms | https://core.telegram.org/api/obtaining_api_id and https://core.telegram.org/api/terms |
-| Tellers TL | https://github.com/gdlbo/tellers-tl |
-| Tellers MTProto runtime | https://github.com/gdlbo/telers-mtproto-impl |
+| Telegram TL schemas | https://github.com/monogram-android/mono-rs/blob/main/docs/THIRD_PARTY_NOTICES.md |
+| MTProto runtime | https://github.com/monogram-android/mono-rs |
 | Telegram Android | https://github.com/DrKLO/Telegram |
 | Grammers | https://github.com/LonamiWebs/grammers |
 | Telegram Desktop | https://github.com/telegramdesktop/tdesktop |

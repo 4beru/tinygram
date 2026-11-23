@@ -60,6 +60,7 @@ fun ChatEntity.toModel(): Chat = Chat(
     canDeleteOthers = canDeleteOthers,
     canManageTopics = canManageTopics,
     emojiStatusDocumentId = emojiStatusDocumentId,
+    canSendPolls = canSendPolls,
 )
 
 fun Chat.toEntity(): ChatEntity = ChatEntity(
@@ -101,6 +102,7 @@ fun Chat.toEntity(): ChatEntity = ChatEntity(
     canDeleteOthers = canDeleteOthers,
     canManageTopics = canManageTopics,
     emojiStatusDocumentId = emojiStatusDocumentId,
+    canSendPolls = canSendPolls,
 )
 
 fun FolderEntity.toModel(): Folder = Folder(
@@ -159,6 +161,7 @@ fun MessageEntity.toModel(): Message = Message(
     repliesCount = repliesCount,
     discussionPeerId = discussionPeerId,
     replyQuote = replyQuote,
+    replyQuoteEntities = TextEntities.parse(replyQuoteEntitiesJson),
     entities = TextEntities.parse(entitiesJson),
     replyToMsgId = replyToMsgId,
     replyToTopId = replyToTopId,
@@ -197,6 +200,7 @@ fun Message.toEntity(): MessageEntity = MessageEntity(
     repliesCount = repliesCount,
     discussionPeerId = discussionPeerId,
     replyQuote = replyQuote,
+    replyQuoteEntitiesJson = TextEntities.serialize(replyQuoteEntities),
     entitiesJson = TextEntities.serialize(entities),
     replyToMsgId = replyToMsgId,
     replyToTopId = replyToTopId,

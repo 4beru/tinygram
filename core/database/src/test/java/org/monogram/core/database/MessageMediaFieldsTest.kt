@@ -12,6 +12,7 @@ import org.monogram.core.models.ReplyButton
 import org.monogram.core.models.ReplyButtonType
 import org.monogram.core.models.ReplyMarkup
 import org.monogram.core.models.ReplyMarkupKind
+import org.monogram.core.models.TextEntity
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -19,7 +20,7 @@ import java.util.concurrent.atomic.AtomicReference
 class MessageMediaFieldsTest {
     @Test
     fun schemaVersionIsCurrent() {
-        assertEquals(8, DatabaseProvider.SCHEMA_VERSION)
+        assertEquals(10, DatabaseProvider.SCHEMA_VERSION)
     }
 
     @Test
@@ -29,6 +30,11 @@ class MessageMediaFieldsTest {
         assertTrue(DatabaseProvider.hasMigrationPath(1, 2))
         assertTrue(DatabaseProvider.hasMigrationPath(2, 3))
         assertTrue(DatabaseProvider.hasMigrationPath(3, 4))
+        assertTrue(DatabaseProvider.hasMigrationPath(8, 9))
+        assertTrue(DatabaseProvider.hasMigrationPath(9, 10))
+        assertTrue(DatabaseProvider.hasMigrationPath(10, 11))
+        assertTrue(DatabaseProvider.hasMigrationPath(11, 12))
+        assertTrue(DatabaseProvider.hasMigrationPath(13, 14))
         assertFalse(DatabaseProvider.hasMigrationPath(32))
         assertFalse(DatabaseProvider.hasMigrationPath(3, 2))
     }
@@ -64,6 +70,8 @@ class MessageMediaFieldsTest {
             mediaHeight = 720,
             fileSize = 8_000_000,
             supportsStreaming = true,
+            replyQuote = "bold",
+            replyQuoteEntities = listOf(TextEntity("bold", 0, 4)),
             replyToMsgId = 3,
             replyToTopId = 42,
             forumTopic = true,
@@ -89,6 +97,8 @@ class MessageMediaFieldsTest {
         assertEquals(720, back.mediaHeight)
         assertEquals("video", back.mediaKind)
         assertEquals("doc:1:thumb", back.thumbCacheKey)
+        assertEquals("bold", back.replyQuote)
+        assertEquals(listOf(TextEntity("bold", 0, 4)), back.replyQuoteEntities)
         assertEquals(3, back.replyToMsgId)
         assertEquals(42, back.replyToTopId)
         assertEquals(true, back.forumTopic)
@@ -104,6 +114,29 @@ class MessageMediaFieldsTest {
         assertEquals(55L, back.randomId)
         assertEquals(true, back.supportsStreaming)
         assertEquals(8_000_000L, back.fileSize)
+        val richChecklist = org.monogram.core.models.Checklist(
+            "😀 task", othersCanComplete = true,
+            entities = listOf(TextEntity("bold", 3, 4)), items = listOf(
+                org.monogram.core.models.ChecklistItem(
+                    -7,
+                    "😀 task",
+                    done = true,
+                    completedBy = 42,
+                    completedAt = 9,
+                    entities = listOf(TextEntity("italic", 3, 4))
+                )
+            )
+        )
+        val todo = Message(
+            MessageId(PeerId(42), 8),
+            null,
+            null,
+            2,
+            outgoing = false,
+            mediaKind = "todo",
+            checklist = richChecklist
+        )
+        assertEquals(richChecklist, todo.toEntity().toModel().checklist)
     }
 
     @Test

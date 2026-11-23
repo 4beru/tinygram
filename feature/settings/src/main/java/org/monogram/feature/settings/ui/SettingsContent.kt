@@ -38,6 +38,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -81,6 +82,7 @@ import org.monogram.core.ui.components.AppSyncStatus
 import org.monogram.core.ui.media.mediaViewerMotionEnabled
 import org.monogram.core.ui.rememberEnsuredFile
 import org.monogram.core.ui.rememberStrippedPreview
+import org.monogram.feature.settings.DevicesStore
 import org.monogram.feature.settings.R
 import org.monogram.feature.settings.SettingsComponent
 import org.monogram.feature.settings.SettingsFolderHost
@@ -114,6 +116,12 @@ fun SettingsContent(
     var pickingLimit by remember { mutableStateOf(false) }
     val cacheLimit by MediaCacheLimitStore.current.collectAsStateWithLifecycle()
     val cacheLimitText = cacheLimitLabel(cacheLimit)
+    val activeDeviceCount by component.devices.collectAsStateWithLifecycle()
+    LaunchedEffect(component) {
+        if (activeDeviceCount.sessions.isEmpty()) {
+            component.onDevices(DevicesStore.Intent.Refresh)
+        }
+    }
     var debugStatsExpanded by rememberSaveable { mutableStateOf("") }
     val pages by component.pages.subscribeAsState()
     val page = pages.active.instance
@@ -179,6 +187,9 @@ fun SettingsContent(
     )
     val title = when (page) {
         SettingsPage.Home -> stringResource(R.string.settings_title)
+        SettingsPage.Passkeys -> stringResource(R.string.settings_passkeys)
+        SettingsPage.Devices -> stringResource(R.string.settings_devices)
+        SettingsPage.DeviceScanner -> stringResource(R.string.settings_devices_link)
         SettingsPage.Proxy -> stringResource(R.string.settings_proxy)
         SettingsPage.Data -> stringResource(R.string.settings_data)
         SettingsPage.DebugStats -> stringResource(R.string.settings_debug_stats)
@@ -212,101 +223,115 @@ fun SettingsContent(
         containerColor = MaterialTheme.colorScheme.surface,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            TopAppBar(
-                windowInsets = WindowInsets.statusBars,
-                title = {
-                    AnimatedContent(
-                        targetState = title to (page == SettingsPage.Home),
-                        transitionSpec = {
-                            fadeIn(tween(180)) togetherWith fadeOut(tween(120))
-                        },
-                        label = "settingsTitle",
-                    ) { (barTitle, home) ->
-                        if (home) {
-                            AppBarSyncTitle(
-                                idleTitle = barTitle,
-                                sync = when {
-                                    state.loading && profile == null -> AppSyncStatus.Connecting
-                                    state.loading -> AppSyncStatus.Syncing
-                                    else -> AppSyncStatus.Hidden
-                                },
-                            )
-                        } else {
-                            Text(
-                                barTitle,
-                                style = MaterialTheme.typography.titleLargeEmphasized,
-                                maxLines = 1,
-                            )
-                        }
-                    }
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            if (page == SettingsPage.Home) {
-                                component.onBack()
-                            } else {
-                                component.popPage()
-                            }
-                        },
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = stringResource(R.string.settings_back),
-                        )
-                    }
-                },
-                actions = {
-                    if (page == SettingsPage.Logs) {
-                        LogsTopActions(
-                            onShare = {
-                                val kind = debugLogKind(logKindName)
-                                logShareFailed = !shareDebugLog(
-                                    logContext,
-                                    DebugLog.exportText(kind, logQuery),
-                                )
-                            },
-                            onClear = { confirmClearLogs = true },
-                        )
-                    }
-                    if (page == SettingsPage.Folders && folders != null) {
+            if (page != SettingsPage.DeviceScanner) {
+                TopAppBar(
+                    windowInsets = WindowInsets.statusBars,
+                    title = {
                         AnimatedContent(
-                            targetState = folders.isEditing,
+                            targetState = title to (page == SettingsPage.Home),
                             transitionSpec = {
                                 fadeIn(tween(180)) togetherWith fadeOut(tween(120))
                             },
-                            label = "foldersActions",
-                        ) { editing ->
-                            Row {
-                                if (editing) {
-                                    TextButton(
-                                        onClick = folders.onSave,
-                                        enabled = folders.canSave,
-                                    ) {
-                                        Text(stringResource(R.string.settings_save))
-                                    }
+                            label = "settingsTitle",
+                        ) { (barTitle, home) ->
+                            if (home) {
+                                AppBarSyncTitle(
+                                    idleTitle = barTitle,
+                                    sync = when {
+                                        state.loading && profile == null -> AppSyncStatus.Connecting
+                                        state.loading -> AppSyncStatus.Syncing
+                                        else -> AppSyncStatus.Hidden
+                                    },
+                                )
+                            } else {
+                                Text(
+                                    barTitle,
+                                    style = MaterialTheme.typography.titleLargeEmphasized,
+                                    maxLines = 1,
+                                )
+                            }
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                if (page == SettingsPage.Home) {
+                                    component.onBack()
                                 } else {
-                                    IconButton(onClick = folders.onAdd) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.Add,
-                                            contentDescription = stringResource(R.string.settings_folders_add),
-                                        )
-                                    }
-                                    IconButton(onClick = folders.onRefresh) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.Refresh,
-                                            contentDescription = stringResource(R.string.settings_folders_refresh),
-                                        )
+                                    component.popPage()
+                                }
+                            },
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                                contentDescription = stringResource(R.string.settings_back),
+                            )
+                        }
+                    },
+                    actions = {
+                        if (page == SettingsPage.Devices) {
+                            val devices by component.devices.collectAsStateWithLifecycle()
+                            IconButton(
+                                onClick = { component.onDevices(DevicesStore.Intent.Refresh) },
+                                enabled = !devices.loading,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Refresh,
+                                    contentDescription = stringResource(R.string.settings_devices_refresh),
+                                )
+                            }
+                        }
+                        if (page == SettingsPage.Logs) {
+                            LogsTopActions(
+                                onShare = {
+                                    val kind = debugLogKind(logKindName)
+                                    logShareFailed = !shareDebugLog(
+                                        logContext,
+                                        DebugLog.exportText(kind, logQuery),
+                                    )
+                                },
+                                onClear = { confirmClearLogs = true },
+                            )
+                        }
+                        if (page == SettingsPage.Folders && folders != null) {
+                            AnimatedContent(
+                                targetState = folders.isEditing,
+                                transitionSpec = {
+                                    fadeIn(tween(180)) togetherWith fadeOut(tween(120))
+                                },
+                                label = "foldersActions",
+                            ) { editing ->
+                                Row {
+                                    if (editing) {
+                                        TextButton(
+                                            onClick = folders.onSave,
+                                            enabled = folders.canSave,
+                                        ) {
+                                            Text(stringResource(R.string.settings_save))
+                                        }
+                                    } else {
+                                        IconButton(onClick = folders.onAdd) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.Add,
+                                                contentDescription = stringResource(R.string.settings_folders_add),
+                                            )
+                                        }
+                                        IconButton(onClick = folders.onRefresh) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.Refresh,
+                                                contentDescription = stringResource(R.string.settings_folders_refresh),
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
-            )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                    ),
+                )
+            }
         },
     ) { innerPadding ->
         Children(
@@ -319,6 +344,16 @@ fun SettingsContent(
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface)) {
                     when (val visiblePage = child.instance) {
+                        SettingsPage.Passkeys -> PasskeysSettings(component, Modifier.padding(innerPadding))
+                        SettingsPage.Devices -> DevicesSettings(
+                            component,
+                            Modifier.padding(innerPadding),
+                        )
+                        SettingsPage.DeviceScanner -> DeviceQrScanner(
+                            onScanned = component::onDeviceScanned,
+                            onBack = component::popPage,
+                            modifier = Modifier,
+                        )
                         SettingsPage.Home -> SettingsPageList(innerPadding) {
                             if (state.error != null) {
                                 item {
@@ -344,6 +379,10 @@ fun SettingsContent(
                                 selfPeerId = state.profile?.id?.value,
                                 updateState = updateState,
                                 updatesEnabled = component.updatesEnabled,
+                                devicesSubtitle = activeDeviceCount.sessions
+                                    .count { !it.current && !it.passwordPending }
+                                    .takeIf { it > 0 },
+                                apiLayer = state.apiLayer,
                             )
                         }
 
@@ -626,6 +665,9 @@ private fun SettingsPageList(
 
 private fun settingsPageKey(page: SettingsPage): String = when (page) {
     SettingsPage.Home -> "home"
+    SettingsPage.Passkeys -> "passkeys"
+    SettingsPage.Devices -> "devices"
+    SettingsPage.DeviceScanner -> "device-scanner"
     SettingsPage.Folders -> "folders"
     SettingsPage.Data -> "data"
     SettingsPage.Proxy -> "proxy"
